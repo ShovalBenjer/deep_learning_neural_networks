@@ -237,6 +237,11 @@ if __name__ == "__main__":
                         dest="extra",
                         help="Number of extra LSTM layers.",
                         default=None, type=int)
+    parser.add_argument("-R", "--reverse",
+                    dest="reverse",
+                    action="store_true",
+                    help="If set, train the model with reversed sequences (go_backwards=True in LSTM).")
+
 
     options = parser.parse_args()
 
