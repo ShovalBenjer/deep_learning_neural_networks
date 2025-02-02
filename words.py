@@ -11,10 +11,7 @@ import numpy as np
 
 from tensorboardX import SummaryWriter
 
-# Import our custom utilities from util.py (which you have updated)
 import util
-
-# Use TensorFlow Keras’s loss function
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 
 # Number of sample sentences to generate during training
@@ -23,7 +20,7 @@ CHECK = 5
 def generate_seq(model: Model, seed, size, temperature=1.0):
     """
     Generate a sequence of word indices from the trained model.
-
+    
     :param model: The complete RNN language model.
     :param seed: A numpy array (1D) of word indices to start the generation.
     :param size: The total length of the sequence to generate.
@@ -48,101 +45,149 @@ def sparse_loss(y_true, y_pred):
     """
     return sparse_categorical_crossentropy(y_true, y_pred, from_logits=True)
 
-def go(options):
-    tbw = SummaryWriter(log_dir=options.tb_dir)
+def build_model(numwords, lstm_capacity, extra, reverse):
+    """
+    Build and return a Keras Model for language modeling.
     
-    if options.seed < 0:
-        seed_val = random.randint(0, 1000000)
-        print('random seed: ', seed_val)
-        np.random.seed(seed_val)
-    else:
-        np.random.seed(options.seed)
-    
-    if options.task == 'wikisimple':
-        x, w2i, i2w = util.load_words(util.DIR + '/datasets/wikisimple.txt',
-                                       vocab_size=options.top_words, limit=options.limit)
-        # Determine maximum sentence length and report vocabulary size.
-        x_max_len = max([len(sentence) for sentence in x])
-        numwords = len(i2w)
-        print('max sequence length:', x_max_len)
-        print(numwords, 'distinct words')
-        # Pad sentences into batches (each batch may have a different length)
-        x = util.batch_pad(x, options.batch, add_eos=True)
-    elif options.task == 'file':
-        x, w2i, i2w = util.load_words(options.data_dir,
-                                       vocab_size=options.top_words, limit=options.limit)
-        x_max_len = max([len(sentence) for sentence in x])
-        numwords = len(i2w)
-        print('max sequence length:', x_max_len)
-        print(numwords, 'distinct words')
-        x = util.batch_pad(x, options.batch, add_eos=True)
-    else:
-        raise Exception('Task {} not recognized.'.format(options.task))
-    
-    def decode(seq):
-        return ' '.join(i2w[id] for id in seq)
-    
-    total_sentences = sum([b.shape[0] for b in x])
-    print('Finished data loading.', total_sentences, 'sentences loaded')
-    
-    ## Define the model architecture
+    :param numwords: Size of the vocabulary.
+    :param lstm_capacity: Dimensionality of the LSTM hidden state.
+    :param extra: Number of extra LSTM layers (None means only one layer).
+    :param reverse: Boolean flag; if True, LSTM layers use go_backwards=True.
+    :return: A compiled Keras model.
+    """
     inp = Input(shape=(None,))
-    embedding = Embedding(numwords, options.lstm_capacity, input_length=None)
-    embedded = embedding(inp)
-    
-    # Create the first LSTM layer with the go_backwards flag set per options.reverse.
-    decoder_lstm = LSTM(options.lstm_capacity, return_sequences=True, go_backwards=options.reverse)
-    h = decoder_lstm(embedded)
-    
-    # Optionally, add extra LSTM layers (each with the same reverse setting)
-    if options.extra is not None:
-        for _ in range(options.extra):
-            h = LSTM(options.lstm_capacity, return_sequences=True, go_backwards=options.reverse)(h)
-    
-    # Dense projection to vocabulary logits, wrapped in a TimeDistributed layer.
-    fromhidden = Dense(numwords, activation='linear')
-    out = TimeDistributed(fromhidden)(h)
-    
+    embed = Embedding(numwords, lstm_capacity)
+    x = embed(inp)
+    # First LSTM layer with reverse flag
+    x = LSTM(lstm_capacity, return_sequences=True, go_backwards=reverse)(x)
+    # Extra LSTM layers if specified
+    if extra is not None:
+        for _ in range(extra):
+            x = LSTM(lstm_capacity, return_sequences=True, go_backwards=reverse)(x)
+    dense = Dense(numwords, activation='linear')
+    out = TimeDistributed(dense)(x)
     model = Model(inp, out)
+    return model
+
+def train_model(options, train_data, val_data, test_data, w2i, i2w):
+    """
+    Build and train a language model using globally padded data.
+    Expects train_data, val_data, and test_data to be numpy arrays of shape [num_sentences, seq_length].
     
-    # Use the corrected keyword "learning_rate" for the Adam optimizer.
+    The training loop:
+      - Shuffles the training data each epoch.
+      - Iterates over mini-batches (using range over the array).
+      - Logs training loss via TensorBoardX.
+      - After training, computes perplexity on train, validation, and test sets.
+      - Generates sample sentences and computes sentence probabilities.
+    
+    :param options: An options object with training hyperparameters.
+    :param train_data, val_data, test_data: Numpy arrays (global padded) of shape [N, L].
+    :param w2i, i2w: Word-to-index and index-to-word dictionaries.
+    :return: The trained Keras model.
+    """
+    writer = SummaryWriter(log_dir=options.tb_dir)
+    np.random.seed(options.seed)
+    
+    numwords = len(i2w)
+    model = build_model(numwords, options.lstm_capacity, options.extra, options.reverse)
     opt = keras.optimizers.Adam(learning_rate=options.lr)
     model.compile(opt, sparse_loss)
     model.summary()
     
-    ## Training loop
-    epoch = 0
+    num_train = train_data.shape[0]
     instances_seen = 0
-    while epoch < options.epochs:
-        for batch in tqdm(x):
+    for epoch in range(options.epochs):
+        # Shuffle training data each epoch
+        indices = np.arange(num_train)
+        np.random.shuffle(indices)
+        train_data = train_data[indices]
+        for i in tqdm(range(0, num_train, options.batch)):
+            batch = train_data[i:i+options.batch]
             n, l = batch.shape
-            # Prepend start symbol (assumed to be index 1) and append pad symbol (assumed index 0)
-            batch_shifted = np.concatenate([np.ones((n, 1), dtype='int32'), batch], axis=1)
+            # Prepend start symbol (assumed index 1) and append pad symbol (assumed index 0)
+            batch_in = np.concatenate([np.ones((n, 1), dtype='int32'), batch], axis=1)
             batch_out = np.concatenate([batch, np.zeros((n, 1), dtype='int32')], axis=1)
-            loss = model.train_on_batch(batch_shifted, batch_out[:, :, None])
+            loss = model.train_on_batch(batch_in, batch_out[:, :, None])
             instances_seen += n
-            tbw.add_scalar('lm/batch-loss', float(loss), instances_seen)
-        epoch += 1
+            writer.add_scalar('lm/train_batch_loss', float(loss), instances_seen)
+        print("Epoch {} complete".format(epoch+1))
         
-        # Generate sample sentences at various temperatures.
+        # Generate sample sentences at various temperatures
         for temp in [0.0, 0.9, 1.0, 1.1, 1.2]:
-            print('### TEMP', temp)
+            print("### TEMP", temp)
             for _ in range(CHECK):
-                # Each batch in x is a 2D array (rows = sentences).
-                # Choose a random batch and then a random sentence from that batch.
-                b = random.choice(x)
-                sentence = random.choice(b)  # sentence is a 1D array of indices
+                idx = random.randint(0, num_train - 1)
+                sentence = train_data[idx]  # a 1D array
                 if len(sentence) > 20:
                     seed = sentence[:20]
                 else:
                     seed = sentence
-                seed = np.insert(seed, 0, 1)  # Prepend <START> token (assumed index 1)
+                seed = np.insert(seed, 0, 1)  # Prepend <START>
                 gen = generate_seq(model, seed, 60, temperature=temp)
+                def decode(seq):
+                    return ' '.join(i2w[str(i)] for i in seq)
                 print('*** [', decode(seed), '] ', decode(gen[len(seed):]))
-    tbw.close()
+    writer.close()
+    
+    # Compute perplexity on each dataset
+    ppl_train = compute_perplexity(model, train_data, options.batch)
+    ppl_val = compute_perplexity(model, val_data, options.batch)
+    ppl_test = compute_perplexity(model, test_data, options.batch)
+    
+    print("Perplexity (Train): {:.2f}".format(ppl_train))
+    print("Perplexity (Validation): {:.2f}".format(ppl_val))
+    print("Perplexity (Test): {:.2f}".format(ppl_test))
+    
+    # Generate sentence of length 7 starting with "love I" at different temperatures
+    seed_words = "love I".split()
+    seed_ids = [w2i.get(word.lower(), w2i.get('<UNK>')) for word in seed_words]
+    seed_ids = np.array(seed_ids)
+    print("\nSentence generation (length=7) starting with 'love I':")
+    for temp in [0.1, 1.0, 10.0]:
+        gen = generate_seq(model, np.insert(seed_ids, 0, 1), size=7, temperature=temp)
+        def decode(seq):
+            return ' '.join(i2w[str(i)] for i in seq)
+        print("Temperature {}: {}".format(temp, decode(gen)))
+    
+    # Compute probability for the generated sentence and for "love i cupcakes"
+    def decode(seq):
+        return ' '.join(i2w[str(i)] for i in seq)
+    generated_sentence = decode(gen)
+    p, logp = sentence_probability(generated_sentence, model, w2i, i2w)
+    print("\nProbability for generated sentence '{}': {:.2e} (log={:.2f})".format(generated_sentence, p, logp))
+    sentence2 = "love i cupcakes"
+    p2, logp2 = sentence_probability(sentence2, model, w2i, i2w)
+    print("Probability for sentence 'love i cupcakes': {:.2e} (log={:.2f})".format(p2, logp2))
+    
+    return model
+
+def sentence_probability(sentence, model, w2i, i2w):
+    """
+    Compute the probability and log-probability of a given sentence.
+    
+    The sentence is tokenized by spaces; unknown words are replaced by <UNK>.
+    The model is assumed to predict the next word given the previous tokens.
+    
+    :return: Tuple (probability, log_probability)
+    """
+    words_in = sentence.strip().split()
+    unk = w2i.get('<UNK>', 2)
+    token_ids = [w2i.get(word.lower(), unk) for word in words_in]
+    token_ids = [1] + token_ids  # Prepend <START> token (assumed index 1)
+    token_ids = np.array(token_ids)[None, :]
+    logits = model.predict(token_ids)
+    probs = np.exp(logits) / np.exp(logits).sum(axis=-1, keepdims=True)
+    p = 1.0
+    logp = 0.0
+    for t in range(1, token_ids.shape[1]):
+        prob = probs[0, t-1, token_ids[0, t]]
+        p *= prob
+        logp += np.log(prob + 1e-10)
+    return p, logp
 
 if __name__ == "__main__":
-    ## Parse command-line options
+    # Command-line argument parsing for running as a script.
     parser = ArgumentParser()
     parser.add_argument("-e", "--epochs",
                         dest="epochs",
