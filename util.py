@@ -1,4 +1,17 @@
-from tensorflow.keras.preprocessing.text import text_to_word_sequence
+import re
+# Custom text-to-word conversion function.
+def text_to_word_sequence(text):
+    """
+    Convert a text string into a sequence (list) of lowercase words.
+    Punctuation is removed.
+    
+    :param text: The input text string.
+    :return: A list of words.
+    """
+    text = text.lower()  # convert to lowercase
+    text = re.sub(r'[^\w\s]', '', text)  # remove punctuation
+    return text.split()  # split on whitespace
+
 from keras.layers import Layer
 import keras.utils
 import keras.backend as K
@@ -6,17 +19,20 @@ import keras.backend as K
 from nltk import FreqDist
 import numpy as np
 
-from keras.preprocessing import sequence
+# Use pad_sequences from keras_preprocessing instead of the old keras.preprocessing.sequence module.
+from keras_preprocessing.sequence import pad_sequences
 
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 
 from collections import defaultdict, Counter, OrderedDict
 
 import os
 
 """
-Various utility functions for loading data and performing common operations.
-Some of this code is based on https://github.com/ChunML/seq2seq/blob/master/seq2seq_utils.py
+Various utility functions for loading data and performing other common operations.
+
+Some of this code is based on: 
+https://github.com/ChunML/seq2seq/blob/master/seq2seq_utils.py
 """
 
 # Special tokens
@@ -25,20 +41,20 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 
 def load_words(source, vocab_size=10000, limit=None, max_length=None):
     """
-    Loads sentences (or other natural language sequences) from a text file. Assumes one sequence per line.
+    Loads sentences (or other natural language sequences) from a text file. Assumes a single sequence per line.
     
-    :param source: Path to the text file.
+    :param source: Text file to read from.
     :param vocab_size: Maximum number of words to retain. If there are more unique words than this,
                        only the most frequent (vocab_size - len(EXTRA_SYMBOLS)) words are used;
                        the rest are replaced by the <UNK> symbol.
-    :param limit: If not None, only the first "limit" characters are read (useful for debugging).
+    :param limit: If not None, only the first "limit" characters are read. Useful for debugging on large corpora.
     :param max_length: If not None, sentences longer than this number of words are discarded.
     :return: A tuple containing:
              (1) A list of lists of integers (encoded sentences),
              (2) A dictionary mapping words to indices,
              (3) A list mapping indices to words.
     """
-    # Read the raw text
+    # Read raw text from source
     with open(source, 'r') as f:
         x_data = f.read()
     print('raw data read')
@@ -46,24 +62,24 @@ def load_words(source, vocab_size=10000, limit=None, max_length=None):
     if limit is not None:
         x_data = x_data[:limit]
     
-    # Split text into sequences (one per line)
+    # Split raw text into array of sequences (one per line)
     x = [text_to_word_sequence(line) for line in x_data.split('\n') if len(line) > 0]
     
     if max_length is not None:
         x = [s for s in x if len(s) <= max_length]
     
-    # Build vocabulary: count word frequencies
+    # Create vocabulary from the most common words (reserve space for special tokens)
     dist = FreqDist(np.hstack(x))
     x_vocab = dist.most_common(vocab_size - len(EXTRA_SYMBOLS))
     
-    # Create index-to-word mapping; prepend special tokens
+    # Build index-to-word mapping (prepend special tokens)
     i2w = [word[0] for word in x_vocab]
     i2w = EXTRA_SYMBOLS + i2w
     
-    # Create word-to-index mapping
+    # Build word-to-index mapping
     w2i = {word: ix for ix, word in enumerate(i2w)}
     
-    # Encode each word in each sentence as its index
+    # Convert each word to its corresponding index
     for i, sentence in enumerate(x):
         for j, word in enumerate(sentence):
             if word in w2i:
@@ -77,8 +93,8 @@ def load_characters(source, length=None, limit=None):
     """
     Reads a text file as a stream of characters and splits it into chunks.
     
-    :param source: Path to the text file.
-    :param length: Size of each chunk. If None, the text is split by line.
+    :param source: The text file to read.
+    :param length: The size of each chunk. If None, the text is split by line.
     :param limit: If not None, only the first "limit" characters are read.
     :return: A tuple containing:
              (1) A list of lists (each list is a sequence of characters),
@@ -97,7 +113,6 @@ def load_characters(source, length=None, limit=None):
     else:
         x = [list(chunk) for chunk in chunks(x_data, length)]
     
-    # Build vocabulary of characters
     chars = set()
     for line in x:
         for char in line:
@@ -133,7 +148,7 @@ def process_data(word_sentences, max_len, word_to_ix):
 
 def batch_pad(x, batch_size, min_length=3, add_eos=False, extra_padding=0):
     """
-    Sorts and pads a list of integer sequences into batches so that every sentence in a batch
+    Sorts and pads a list of integer sequences into batches so that every sentence in a batch 
     has the same length.
     
     :param x: List of integer sequences.
@@ -158,10 +173,10 @@ def batch_pad(x, batch_size, min_length=3, add_eos=False, extra_padding=0):
         batch = x[start:end]
         mlen = max([len(l) + extra_padding for l in batch])
         if mlen >= min_length:
-            batch = sequence.pad_sequences(batch, maxlen=mlen, dtype='int32', padding='post', truncating='post')
+            batch = pad_sequences(batch, maxlen=mlen, dtype='int32', padding='post', truncating='post')
             batches.append(batch)
         start += batch_size
-
+    
     print('max length per batch: ', [max([len(l) for l in batch]) for batch in batches])
     return batches
 
@@ -220,16 +235,20 @@ def sample_logits(preds, temperature=1.0):
 
 class KLLayer(Layer):
     """
-    A custom Keras layer that performs an identity transformation while adding
-    a KL divergence loss to the final model loss.
+    Identity transform layer that adds KL divergence to the final model loss.
     
-    To scale the KL loss term, call:
-         K.set_value(kl_layer.weight, new_value)
+    During training, call:
+            K.set_value(kl_layer.weight, new_value)
+    to scale the KL loss term.
+    
+    Based on:
+    http://tiao.io/posts/implementing-variational-autoencoders-in-keras-beyond-the-quickstart-tutorial/
     """
     def __init__(self, weight=None, *args, **kwargs):
         self.is_placeholder = True
         self.weight = weight
         super().__init__(*args, **kwargs)
+
     def call(self, inputs):
         mu, log_var = inputs
         kl_batch = -0.5 * K.sum(1 + log_var - K.square(mu) - K.exp(log_var), axis=-1)
@@ -241,15 +260,17 @@ class KLLayer(Layer):
 
 class Sample(Layer):
     """
-    A custom Keras layer that performs the sampling step in a variational autoencoder.
+    Performs the sampling step (as used in variational autoencoders).
     """
     def __init__(self, *args, **kwargs):
         self.is_placeholder = True
         super().__init__(*args, **kwargs)
+
     def call(self, inputs):
         mu, log_var, eps = inputs
         z = K.exp(0.5 * log_var) * eps + mu
         return z
+
     def compute_output_shape(self, input_shape):
         shape_mu, _, _ = input_shape
         return shape_mu
@@ -270,7 +291,7 @@ def interpolate(start, end, steps):
 
 class OrderedCounter(Counter, OrderedDict):
     """
-    A Counter that remembers the order in which elements were first encountered.
+    A Counter that remembers the order elements are first encountered.
     """
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
@@ -281,16 +302,17 @@ def idx2word(idx, i2w, pad_idx):
     """
     Converts sequences of indices into human-readable sentences.
     
-    :param idx: A list of sequences (each sequence is a list of indices).
-    :param i2w: Dictionary mapping indices to words.
-    :param pad_idx: The padding index (when encountered, stop the sentence).
+    :param idx: A list of sequences (each is a list of indices).
+    :param i2w: A mapping (dictionary) from index (as string) to word.
+    :param pad_idx: The index used for padding; processing stops at this index.
     :return: A list of decoded sentences.
     """
-    sent_str = [str() for _ in range(len(idx))]
+    sent_str = ["" for _ in range(len(idx))]
     for i, sent in enumerate(idx):
         for word_id in sent:
             if word_id == pad_idx:
                 break
+            # Convert word_id to string since i2w keys are strings
             sent_str[i] += i2w[str(word_id.item())] + " "
         sent_str[i] = sent_str[i].strip()
     return sent_str
