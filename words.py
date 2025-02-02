@@ -20,7 +20,7 @@ CHECK = 5
 def generate_seq(model: Model, seed, size, temperature=1.0):
     """
     Generate a sequence of word indices from the trained model.
-    
+
     :param model: The complete RNN language model.
     :param seed: A numpy array (1D) of word indices to start the generation.
     :param size: The total length of the sequence to generate.
@@ -76,13 +76,13 @@ def train_model(options, train_data, val_data, test_data, w2i, i2w):
     
     The training loop:
       - Shuffles the training data each epoch.
-      - Iterates over mini-batches (using range over the array).
+      - Iterates over mini-batches.
       - Logs training loss via TensorBoardX.
       - After training, computes perplexity on train, validation, and test sets.
       - Generates sample sentences and computes sentence probabilities.
     
     :param options: An options object with training hyperparameters.
-    :param train_data, val_data, test_data: Numpy arrays (global padded) of shape [N, L].
+    :param train_data, val_data, test_data: Numpy arrays (globally padded) of shape [N, L].
     :param w2i, i2w: Word-to-index and index-to-word dictionaries.
     :return: The trained Keras model.
     """
@@ -105,7 +105,7 @@ def train_model(options, train_data, val_data, test_data, w2i, i2w):
         for i in tqdm(range(0, num_train, options.batch)):
             batch = train_data[i:i+options.batch]
             n, l = batch.shape
-            # Prepend start symbol (assumed index 1) and append pad symbol (assumed index 0)
+            # Prepend start symbol (assumed to be index 1) and append pad symbol (assumed index 0)
             batch_in = np.concatenate([np.ones((n, 1), dtype='int32'), batch], axis=1)
             batch_out = np.concatenate([batch, np.zeros((n, 1), dtype='int32')], axis=1)
             loss = model.train_on_batch(batch_in, batch_out[:, :, None])
@@ -113,17 +113,18 @@ def train_model(options, train_data, val_data, test_data, w2i, i2w):
             writer.add_scalar('lm/train_batch_loss', float(loss), instances_seen)
         print("Epoch {} complete".format(epoch+1))
         
-        # Generate sample sentences at various temperatures
+        # Generate sample sentences at various temperatures.
         for temp in [0.0, 0.9, 1.0, 1.1, 1.2]:
             print("### TEMP", temp)
             for _ in range(CHECK):
+                # Here, train_data is a 2D numpy array (each row is one padded sentence)
                 idx = random.randint(0, num_train - 1)
-                sentence = train_data[idx]  # a 1D array
+                sentence = train_data[idx]  # sentence is a 1D array
                 if len(sentence) > 20:
                     seed = sentence[:20]
                 else:
                     seed = sentence
-                seed = np.insert(seed, 0, 1)  # Prepend <START>
+                seed = np.insert(seed, 0, 1)  # Prepend <START> token (assumed index 1)
                 gen = generate_seq(model, seed, 60, temperature=temp)
                 def decode(seq):
                     return ' '.join(i2w[str(i)] for i in seq)
@@ -187,7 +188,7 @@ def sentence_probability(sentence, model, w2i, i2w):
     return p, logp
 
 if __name__ == "__main__":
-    # Command-line argument parsing for running as a script.
+    ## Parse command-line options
     parser = ArgumentParser()
     parser.add_argument("-e", "--epochs",
                         dest="epochs",
