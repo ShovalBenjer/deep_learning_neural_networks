@@ -12,6 +12,7 @@ import numpy as np
 from tensorboardX import SummaryWriter
 
 import util
+from tensorflow.keras.losses import sparse_categorical_crossentropy
 
 # Number of sample sentences to generate during training
 CHECK = 5
@@ -19,7 +20,7 @@ CHECK = 5
 def generate_seq(model: Model, seed, size, temperature=1.0):
     """
     Generate a sequence of word indices from the trained model.
-
+    
     :param model: The complete RNN language model.
     :param seed: A numpy array (1D) of word indices to start the generation.
     :param size: The total length of the sequence to generate.
@@ -40,7 +41,12 @@ def generate_seq(model: Model, seed, size, temperature=1.0):
     return [int(t) for t in tokens]
 
 def sparse_loss(y_true, y_pred):
-    return K.sparse_categorical_crossentropy(y_true, y_pred, from_logits=True)
+    """
+    Compute sparse categorical crossentropy loss.
+    
+    Uses TensorFlow Keras's sparse_categorical_crossentropy loss function with logits.
+    """
+    return sparse_categorical_crossentropy(y_true, y_pred, from_logits=True)
 
 def go(options):
     tbw = SummaryWriter(log_dir=options.tb_dir)
