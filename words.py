@@ -1,250 +1,197 @@
 import keras
-
 import keras.backend as K
-from keras.datasets import imdb
-from keras.layers import  LSTM, Embedding, TimeDistributed, Input, Dense
+from keras.layers import LSTM, Embedding, TimeDistributed, Input, Dense
 from keras.models import Model
 from tensorflow.python.client import device_lib
 
 from tqdm import tqdm
 import os, random
-
 from argparse import ArgumentParser
-
 import numpy as np
 
 from tensorboardX import SummaryWriter
 
 import util
 
+# Number of sample sentences to generate during training
 CHECK = 5
 
-def generate_seq(model : Model, seed, size, temperature=1.0):
+def generate_seq(model: Model, seed, size, temperature=1.0):
     """
-    :param model: The complete RNN language model
-    :param seed: The first few wordas of the sequence to start generating from
-    :param size: The total size of the sequence to generate
-    :param temperature: This controls how much we follow the probabilities provided by the network. For t=1.0 we just
-        sample directly according to the probabilities. Lower temperatures make the high-probability words more likely
-        (providing more likely, but slightly boring sentences) and higher temperatures make the lower probabilities more
-        likely (resulting is weirder sentences). For temperature=0.0, the generation is _greedy_, i.e. the word with the
-        highest probability is always chosen.
-    :return: A list of integers representing a samples sentence
-    """
+    Generate a sequence of word indices from the trained model.
 
+    :param model: The complete RNN language model.
+    :param seed: A numpy array (1D) of word indices to start the generation.
+    :param size: The total length of the sequence to generate.
+    :param temperature: Controls randomness in sampling. For temperature=1.0, sample directly according to model probabilities.
+                        Lower temperatures make high-probability words even more likely (more predictable output);
+                        higher temperatures yield more diverse (but potentially erratic) outputs.
+                        For temperature=0.0 the generation is greedy.
+    :return: A list of integers representing the generated sequence.
+    """
     ls = seed.shape[0]
-
-    # Due to the way Keras RNNs work, we feed the model a complete sequence each time. At first it's just the seed,
-    # zero-padded to the right length. With each iteration we sample and set the next character.
-
+    # Concatenate the seed with zeros (for remaining positions)
     tokens = np.concatenate([seed, np.zeros(size - ls)])
-
     for i in range(ls, size):
-
-        probs = model.predict(tokens[None,:])
-
-        # Extract the i-th probability vector and sample an index from it
+        probs = model.predict(tokens[None, :])
+        # Sample the next token from the logits using our utility function
         next_token = util.sample_logits(probs[0, i-1, :], temperature=temperature)
-
         tokens[i] = next_token
-
     return [int(t) for t in tokens]
 
 def sparse_loss(y_true, y_pred):
     return K.sparse_categorical_crossentropy(y_true, y_pred, from_logits=True)
 
 def go(options):
-
     tbw = SummaryWriter(log_dir=options.tb_dir)
 
     if options.seed < 0:
-        seed = random.randint(0, 1000000)
-        print('random seed: ', seed)
-        np.random.seed(seed)
+        seed_val = random.randint(0, 1000000)
+        print('random seed: ', seed_val)
+        np.random.seed(seed_val)
     else:
         np.random.seed(options.seed)
 
     if options.task == 'wikisimple':
-
-        x, w21, i2w = \
-            util.load_words(util.DIR + '/datasets/wikisimple.txt', vocab_size=options.top_words, limit=options.limit)
-
-        # Finding the length of the longest sequence
+        x, w2i, i2w = util.load_words(util.DIR + '/datasets/wikisimple.txt',
+                                       vocab_size=options.top_words, limit=options.limit)
+        # Find the maximum sentence length
         x_max_len = max([len(sentence) for sentence in x])
-
         numwords = len(i2w)
-        print('max sequence length ', x_max_len)
+        print('max sequence length:', x_max_len)
         print(numwords, 'distinct words')
-
+        # Pad sentences into batches
         x = util.batch_pad(x, options.batch, add_eos=True)
-
     elif options.task == 'file':
-
-        x, w21, i2w = \
-            util.load_words(options.data_dir, vocab_size=options.top_words, limit=options.limit)
-
-        # Finding the length of the longest sequence
+        x, w2i, i2w = util.load_words(options.data_dir,
+                                       vocab_size=options.top_words, limit=options.limit)
         x_max_len = max([len(sentence) for sentence in x])
-
         numwords = len(i2w)
-        print('max sequence length ', x_max_len)
+        print('max sequence length:', x_max_len)
         print(numwords, 'distinct words')
-
         x = util.batch_pad(x, options.batch, add_eos=True)
-
     else:
         raise Exception('Task {} not recognized.'.format(options.task))
 
     def decode(seq):
         return ' '.join(i2w[id] for id in seq)
 
-    print('Finished data loading. ', sum([b.shape[0] for b in x]), ' sentences loaded')
+    print('Finished data loading.', sum([b.shape[0] for b in x]), 'sentences loaded')
 
-    ## Define model
-
-    input = Input(shape=(None, ))
+    ## Define the model architecture
+    inp = Input(shape=(None,))
     embedding = Embedding(numwords, options.lstm_capacity, input_length=None)
+    embedded = embedding(inp)
 
-    embedded = embedding(input)
-
-    decoder_lstm = LSTM(options.lstm_capacity, return_sequences=True)
+    # Create the first LSTM layer with go_backwards flag based on options.reverse.
+    decoder_lstm = LSTM(options.lstm_capacity, return_sequences=True, go_backwards=options.reverse)
     h = decoder_lstm(embedded)
 
+    # Optionally, add extra LSTM layers (each with the same reverse flag)
     if options.extra is not None:
         for _ in range(options.extra):
-            h = LSTM(options.lstm_capacity, return_sequences=True)(h)
+            h = LSTM(options.lstm_capacity, return_sequences=True, go_backwards=options.reverse)(h)
 
+    # Dense projection to vocabulary logits; wrapped in a TimeDistributed layer.
     fromhidden = Dense(numwords, activation='linear')
     out = TimeDistributed(fromhidden)(h)
 
-    model = Model(input, out)
+    model = Model(inp, out)
 
     opt = keras.optimizers.Adam(lr=options.lr)
-    lss = sparse_loss
-
-    model.compile(opt, lss)
+    model.compile(opt, sparse_loss)
     model.summary()
 
-    ## Training
-
-    #- Since we have a variable batch size, we make our own training loop, and train with
-    #  model.train_on_batch(...). It's a little more verbose, but it gives us more control.
-
+    ## Training loop
     epoch = 0
     instances_seen = 0
     while epoch < options.epochs:
-
         for batch in tqdm(x):
             n, l = batch.shape
-
-            batch_shifted = np.concatenate([np.ones((n, 1)), batch], axis=1)  # prepend start symbol
-            batch_out = np.concatenate([batch, np.zeros((n, 1))], axis=1)     # append pad symbol
-
+            # Prepend start symbol (assumed to be index 1) and append pad symbol (assumed index 0)
+            batch_shifted = np.concatenate([np.ones((n, 1), dtype='int32'), batch], axis=1)
+            batch_out = np.concatenate([batch, np.zeros((n, 1), dtype='int32')], axis=1)
             loss = model.train_on_batch(batch_shifted, batch_out[:, :, None])
-
             instances_seen += n
             tbw.add_scalar('lm/batch-loss', float(loss), instances_seen)
-
         epoch += 1
-
-        # Show samples for some sentences from random batches
-        for temp in [0.0, 0.9, 1, 1.1, 1.2]:
-            print('### TEMP ', temp)
+        # Generate sample sentences for various temperatures.
+        for temp in [0.0, 0.9, 1.0, 1.1, 1.2]:
+            print('### TEMP', temp)
             for i in range(CHECK):
                 b = random.choice(x)
-
                 if b.shape[1] > 20:
-                    seed = b[0,:20]
+                    seed = b[0, :20]
                 else:
                     seed = b[0, :]
-
-                seed = np.insert(seed, 0, 1)
-                gen = generate_seq(model, seed,  60, temperature=temp)
-
+                seed = np.insert(seed, 0, 1)  # prepend start symbol
+                gen = generate_seq(model, seed, 60, temperature=temp)
                 print('*** [', decode(seed), '] ', decode(gen[len(seed):]))
-
+                
 if __name__ == "__main__":
-
-    ## Parse the command line options
+    ## Parse command-line options
     parser = ArgumentParser()
-
     parser.add_argument("-e", "--epochs",
                         dest="epochs",
                         help="Number of epochs.",
                         default=20, type=int)
-
     parser.add_argument("-E", "--embedding-size",
                         dest="embedding_size",
                         help="Size of the word embeddings on the input layer.",
                         default=300, type=int)
-
     parser.add_argument("-o", "--output-every",
                         dest="out_every",
                         help="Output every n epochs.",
                         default=1, type=int)
-
     parser.add_argument("-l", "--learn-rate",
                         dest="lr",
                         help="Learning rate",
                         default=0.001, type=float)
-
     parser.add_argument("-b", "--batch-size",
                         dest="batch",
                         help="Batch size",
                         default=128, type=int)
-
     parser.add_argument("-t", "--task",
                         dest="task",
                         help="Task",
                         default='wikisimple', type=str)
-
     parser.add_argument("-D", "--data-directory",
-                        dest="data",
-                        help="Data file. Should contain one sentence per line.",
+                        dest="data_dir",
+                        help="Data file directory (one sentence per line).",
                         default='./data', type=str)
-
     parser.add_argument("-L", "--lstm-hidden-size",
                         dest="lstm_capacity",
                         help="LSTM capacity",
                         default=256, type=int)
-
     parser.add_argument("-m", "--max_length",
                         dest="max_length",
                         help="Max length",
                         default=None, type=int)
-
     parser.add_argument("-w", "--top_words",
                         dest="top_words",
-                        help="Top words",
+                        help="Top words (vocab size)",
                         default=10000, type=int)
-
     parser.add_argument("-I", "--limit",
                         dest="limit",
                         help="Character cap for the corpus",
                         default=None, type=int)
-
     parser.add_argument("-T", "--tb-directory",
                         dest="tb_dir",
-                        help="Tensorboard directory",
+                        help="TensorBoard log directory",
                         default='./runs/words', type=str)
-
     parser.add_argument("-r", "--random-seed",
                         dest="seed",
-                        help="RNG seed. Negative for random (seed is printed for reproducability).",
+                        help="RNG seed. Negative for random (seed is printed for reproducibility).",
                         default=-1, type=int)
-
     parser.add_argument("-x", "--extra-layers",
                         dest="extra",
-                        help="Number of extra LSTM layers.",
+                        help="Number of extra LSTM layers (None means one LSTM layer only).",
                         default=None, type=int)
+    # New flag to enable reverse training (LSTM go_backwards)
     parser.add_argument("-R", "--reverse",
-                    dest="reverse",
-                    action="store_true",
-                    help="If set, train the model with reversed sequences (go_backwards=True in LSTM).")
-
-
+                        dest="reverse",
+                        action="store_true",
+                        help="If set, train the model with reversed sequences (go_backwards=True in LSTM).")
     options = parser.parse_args()
-
     print('OPTIONS', options)
-
     go(options)
