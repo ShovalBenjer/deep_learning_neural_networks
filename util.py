@@ -1,4 +1,4 @@
-from keras.preprocessing.text import text_to_word_sequence
+from tensorflow.keras.preprocessing.text import text_to_word_sequence
 from keras.layers import Layer
 import keras.utils
 import keras.backend as K
