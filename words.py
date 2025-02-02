@@ -11,7 +11,10 @@ import numpy as np
 
 from tensorboardX import SummaryWriter
 
+# Import our custom utilities from util.py (which you have updated)
 import util
+
+# Use TensorFlow Keras’s loss function
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 
 # Number of sample sentences to generate during training
@@ -20,14 +23,14 @@ CHECK = 5
 def generate_seq(model: Model, seed, size, temperature=1.0):
     """
     Generate a sequence of word indices from the trained model.
-    
+
     :param model: The complete RNN language model.
     :param seed: A numpy array (1D) of word indices to start the generation.
     :param size: The total length of the sequence to generate.
-    :param temperature: Controls randomness in sampling. For temperature=1.0, sample directly according to model probabilities.
-                        Lower temperatures make high-probability words even more likely (more predictable output);
-                        higher temperatures yield more diverse (but potentially erratic) outputs.
-                        For temperature=0.0 the generation is greedy.
+    :param temperature: Controls randomness in sampling. For temperature=1.0, sample directly
+                        according to model probabilities. Lower temperatures yield more predictable
+                        output; higher temperatures yield more diverse output. For temperature=0.0 the
+                        generation is greedy.
     :return: A list of integers representing the generated sequence.
     """
     ls = seed.shape[0]
@@ -35,38 +38,35 @@ def generate_seq(model: Model, seed, size, temperature=1.0):
     tokens = np.concatenate([seed, np.zeros(size - ls)])
     for i in range(ls, size):
         probs = model.predict(tokens[None, :])
-        # Sample the next token from the logits using our utility function
         next_token = util.sample_logits(probs[0, i-1, :], temperature=temperature)
         tokens[i] = next_token
     return [int(t) for t in tokens]
 
 def sparse_loss(y_true, y_pred):
     """
-    Compute sparse categorical crossentropy loss.
-    
-    Uses TensorFlow Keras's sparse_categorical_crossentropy loss function with logits.
+    Compute sparse categorical crossentropy loss using TensorFlow Keras's loss function.
     """
     return sparse_categorical_crossentropy(y_true, y_pred, from_logits=True)
 
 def go(options):
     tbw = SummaryWriter(log_dir=options.tb_dir)
-
+    
     if options.seed < 0:
         seed_val = random.randint(0, 1000000)
         print('random seed: ', seed_val)
         np.random.seed(seed_val)
     else:
         np.random.seed(options.seed)
-
+    
     if options.task == 'wikisimple':
         x, w2i, i2w = util.load_words(util.DIR + '/datasets/wikisimple.txt',
                                        vocab_size=options.top_words, limit=options.limit)
-        # Find the maximum sentence length
+        # Determine maximum sentence length and report vocabulary size.
         x_max_len = max([len(sentence) for sentence in x])
         numwords = len(i2w)
         print('max sequence length:', x_max_len)
         print(numwords, 'distinct words')
-        # Pad sentences into batches
+        # Pad sentences into batches (each batch may have a different length)
         x = util.batch_pad(x, options.batch, add_eos=True)
     elif options.task == 'file':
         x, w2i, i2w = util.load_words(options.data_dir,
@@ -78,36 +78,38 @@ def go(options):
         x = util.batch_pad(x, options.batch, add_eos=True)
     else:
         raise Exception('Task {} not recognized.'.format(options.task))
-
+    
     def decode(seq):
         return ' '.join(i2w[id] for id in seq)
-
-    print('Finished data loading.', sum([b.shape[0] for b in x]), 'sentences loaded')
-
+    
+    total_sentences = sum([b.shape[0] for b in x])
+    print('Finished data loading.', total_sentences, 'sentences loaded')
+    
     ## Define the model architecture
     inp = Input(shape=(None,))
     embedding = Embedding(numwords, options.lstm_capacity, input_length=None)
     embedded = embedding(inp)
-
-    # Create the first LSTM layer with go_backwards flag based on options.reverse.
+    
+    # Create the first LSTM layer with the go_backwards flag set per options.reverse.
     decoder_lstm = LSTM(options.lstm_capacity, return_sequences=True, go_backwards=options.reverse)
     h = decoder_lstm(embedded)
-
-    # Optionally, add extra LSTM layers (each with the same reverse flag)
+    
+    # Optionally, add extra LSTM layers (each with the same reverse setting)
     if options.extra is not None:
         for _ in range(options.extra):
             h = LSTM(options.lstm_capacity, return_sequences=True, go_backwards=options.reverse)(h)
-
-    # Dense projection to vocabulary logits; wrapped in a TimeDistributed layer.
+    
+    # Dense projection to vocabulary logits, wrapped in a TimeDistributed layer.
     fromhidden = Dense(numwords, activation='linear')
     out = TimeDistributed(fromhidden)(h)
-
+    
     model = Model(inp, out)
-
+    
+    # Use the corrected keyword "learning_rate" for the Adam optimizer.
     opt = keras.optimizers.Adam(learning_rate=options.lr)
     model.compile(opt, sparse_loss)
     model.summary()
-
+    
     ## Training loop
     epoch = 0
     instances_seen = 0
@@ -121,19 +123,24 @@ def go(options):
             instances_seen += n
             tbw.add_scalar('lm/batch-loss', float(loss), instances_seen)
         epoch += 1
-        # Generate sample sentences for various temperatures.
+        
+        # Generate sample sentences at various temperatures.
         for temp in [0.0, 0.9, 1.0, 1.1, 1.2]:
             print('### TEMP', temp)
-            for i in range(CHECK):
+            for _ in range(CHECK):
+                # Each batch in x is a 2D array (rows = sentences).
+                # Choose a random batch and then a random sentence from that batch.
                 b = random.choice(x)
-                if b.shape[1] > 20:
-                    seed = b[0, :20]
+                sentence = random.choice(b)  # sentence is a 1D array of indices
+                if len(sentence) > 20:
+                    seed = sentence[:20]
                 else:
-                    seed = b[0, :]
-                seed = np.insert(seed, 0, 1)  # prepend start symbol
+                    seed = sentence
+                seed = np.insert(seed, 0, 1)  # Prepend <START> token (assumed index 1)
                 gen = generate_seq(model, seed, 60, temperature=temp)
                 print('*** [', decode(seed), '] ', decode(gen[len(seed):]))
-                
+    tbw.close()
+
 if __name__ == "__main__":
     ## Parse command-line options
     parser = ArgumentParser()
