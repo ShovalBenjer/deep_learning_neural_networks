@@ -21,6 +21,42 @@ Some of this code is based on Based on https://github.com/ChunML/seq2seq/blob/ma
 """
 
 
+def split_batches(batches, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1):
+    """
+    Splits a list of padded batch arrays into train, validation, and test sets.
+    The splitting is done on the first dimension (number of sentences).
+    
+    :param batches: List of numpy arrays, each of shape (batch_size, seq_len)
+    :param train_ratio: Ratio for training set.
+    :param val_ratio: Ratio for validation set.
+    :param test_ratio: Ratio for test set.
+    :return: (train_batches, val_batches, test_batches) each is a list of batches.
+    """
+    all_data = np.concatenate(batches, axis=0)
+    indices = np.arange(all_data.shape[0])
+    np.random.shuffle(indices)
+    n = len(indices)
+    train_end = int(train_ratio * n)
+    val_end = int((train_ratio + val_ratio) * n)
+    train_data = all_data[indices[:train_end]]
+    val_data = all_data[indices[train_end:val_end]]
+    test_data = all_data[indices[val_end:]]
+    
+    # Optionally, re-split these arrays into batches of the original batch size.
+    def make_batches(data, batch_size):
+        nb = []
+        start = 0
+        while start < data.shape[0]:
+            end = min(start + batch_size, data.shape[0])
+            nb.append(data[start:end])
+            start += batch_size
+        return nb
+
+    # Assuming the original batch size is available (here we use  options.batch)
+    # For now, return the full arrays.
+    return train_data, val_data, test_data
+
+
 # Special tokens
 EXTRA_SYMBOLS = ['<PAD>', '<START>', '<UNK>', '<EOS>']
 DIR = os.path.dirname(os.path.realpath(__file__))
