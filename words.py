@@ -98,7 +98,7 @@ def go(options):
 
     model = Model(inp, out)
 
-    opt = keras.optimizers.Adam(lr=options.lr)
+    opt = keras.optimizers.Adam(learning_rate=options.lr)
     model.compile(opt, sparse_loss)
     model.summary()
 
