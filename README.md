@@ -1,4 +1,4 @@
-```markdown
+
 # Deep Learning Notebooks for XOR and MNIST
 
 This repository contains three Jupyter notebooks demonstrating various deep learning techniques using PyTorch. Each notebook focuses on a different aspect of model design, hyperparameter tuning, and real-world datasets (XOR and MNIST).
@@ -23,7 +23,7 @@ This repository contains three Jupyter notebooks demonstrating various deep lear
    - Visualizes learned **filters and feature maps** to highlight how CNNs capture spatial patterns.
 
 ---
-
+```markdown
 ## Requirements
 
 - Python 3.x  
