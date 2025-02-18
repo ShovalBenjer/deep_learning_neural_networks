@@ -9,10 +9,13 @@ This repository contains several Jupyter notebooks demonstrating different deep 
 1. **PyTorch XOR Implementation and Analysis**  
    - Implements a simple neural network to solve the classic XOR problem.  
    - Demonstrates network design with bypass connections and minimal neuron architectures to achieve zero training loss.
+![image](https://github.com/user-attachments/assets/b4a3499d-20eb-4cc9-b069-032f198cc86a)
+
 
 2. **Hyperparameter Exploration for XOR**  
    - Extends the XOR model with experiments on multiple hyperparameters (learning rates, hidden units, bypass connections).  
    - Tracks convergence speed and stability using early stopping and performance logs.
+![image](https://github.com/user-attachments/assets/52bd327a-da30-4b7c-9e58-e5cd5bc810a8)
 
 3. **Deep Learning on MNIST: From Simple Networks to CNNs**
    ![image](https://github.com/user-attachments/assets/258d15b3-a354-47f3-8155-3fb8974d7ff1)
