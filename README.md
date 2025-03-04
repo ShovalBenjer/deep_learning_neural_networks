@@ -4,12 +4,6 @@
 
 ---
 
-## Enhanced Deep Learning Study Book: From Perceptrons to Transformers
-
-**A Comprehensive Guide to Neural Networks and Deep Learning Architectures**
-
----
-
 ## Table of Contents
 
 **I. Foundations of Neural Networks**
