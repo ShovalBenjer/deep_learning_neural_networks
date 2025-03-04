@@ -1,6 +1,5 @@
 ## Enhanced Deep Learning Study Book: From Perceptrons to Transformers
-
-**A Comprehensive Guide to Neural Networks and Deep Learning Architectures**
+![image](https://github.com/user-attachments/assets/f9d64930-39f5-42d3-905e-8509d695efa1)
 
 ---
 
@@ -186,7 +185,9 @@ The fundamental building block of biological neural networks is the neuron.  A b
 *   **Axon:** Transmits the output signal as a **spike** or action potential.
 *   **Synapses:** Connections between neurons where signals are transmitted using neurotransmitters. The strength of a synapse can be adjusted, a process known as **synaptic plasticity**, which is crucial for learning.
 
-[Figure 1: Diagram of a Biological Neuron, highlighting Dendrites, Cell Body, Axon, Axon Ending, and Hillock. (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/c326f041-f01d-4164-b6c9-c26200f7903b)
+
+*Figure 1: Diagram of a Biological Neuron, highlighting Dendrites, Cell Body, Axon, Axon Ending, and Hillock.*
 
 #### Artificial Neurons: Building Blocks of ANNs
 
@@ -201,7 +202,9 @@ Artificial neurons, also known as perceptrons or units, are mathematical abstrac
 *   **Output ($y_i$):** The final signal produced by the neuron, transmitted to other neurons.
     $$y_i = g(z_i)$$
 
-[Figure 2: Diagram of an Artificial Neuron, showing Inputs ($x_j$), Weights ($w_{ij}$), Summation ($\sum$), Bias ($b$), Activation Function ($g$), and Output ($y_i$). (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/302b14f9-a48b-43d6-abdb-a962e1705e11)
+
+*Figure 2: Diagram of an Artificial Neuron, showing Inputs ($x_j$), Weights ($w_{ij}$), Summation ($\sum$), Bias ($b$), Activation Function ($g$), and Output ($y_i$).*
 
 #### Network Architecture: Visible, Hidden, and Depth
 
@@ -233,7 +236,9 @@ The **Perceptron** is one of the earliest and simplest types of artificial neura
 
 At its core, the perceptron uses a **Binary Threshold Unit (BTU)** as its activation function. It takes several inputs, each associated with a weight, calculates a weighted sum of these inputs, adds a bias, and then applies the BTU to decide the output class.
 
-[Figure 3: Diagram of a Perceptron Model, showing Inputs (X1, X2, ..., Xn), Weights (W1, W2, ..., Wn), Summation Unit ($\sum$), Bias (Wo), Binary Threshold Unit (BTU), and Output (Y). (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/2ca46d67-957c-40be-817d-e57ab4ed716f)
+
+*Figure 3: Diagram of a Perceptron Model, showing Inputs (X1, X2, ..., Xn), Weights (W1, W2, ..., Wn), Summation Unit ($\sum$), Bias (Wo), Binary Threshold Unit (BTU), and Output (Y).*
 
 #### Binary Threshold Unit (BTU) Activation
 
@@ -291,7 +296,9 @@ However, a single-layer perceptron **cannot implement the XOR gate**. This limit
 
 *   **Decision Boundary:** A perceptron creates a linear decision boundary (hyperplane) in the input space. For a 2D input space $(x_1, x_2)$, the decision boundary is a straight line defined by $w_1x_1 + w_2x_2 + b = 0$. Points on one side of the line are classified as one class (e.g., output 1), and points on the other side as the other class (e.g., output 0).
 
-[Figure 4: Illustration of Linear Separability. Show a 2D plot with two classes of points separated by a straight line (hyperplane). Also show an example of XOR data that is not linearly separable.]
+![image](https://github.com/user-attachments/assets/b2b1ef18-646a-4cf7-acab-be23422e3b3e)
+
+*Figure 4: Illustration of Linear Separability.*
 
 #### Limitations of Single-Layer Perceptrons
 
@@ -322,8 +329,6 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Properties:** Simple and computationally inexpensive. However, it is non-differentiable at $z_i = 0$, which can be problematic for gradient-based learning algorithms like backpropagation.  It's primarily used in the conceptual understanding of perceptrons and less so in modern deep learning architectures.
 
-*   [Figure 5: Graph of Binary Threshold Unit (BTU) activation function. (Based on the visual in the provided OCR content)]
-
 ##### Logistic Sigmoid Neuron
 
 *   **Definition:** The Logistic Sigmoid function, often just called "Sigmoid," is a smooth, S-shaped activation function that outputs values between 0 and 1. It's widely used in binary classification tasks to model probabilities.
@@ -335,7 +340,9 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Properties:**  Output is interpretable as a probability.  Differentiable everywhere, which is beneficial for gradient-based learning. However, it suffers from the **vanishing gradient problem**, especially for very large positive or negative inputs where the gradient approaches zero, slowing down learning.  The output is not zero-centered, which can lead to inefficiencies in gradient updates in deeper networks.
 
-*   [Figure 6: Graph of Logistic Sigmoid activation function. (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/843ecfc8-8327-4eac-996c-797245e161cd)
+
+*Figure 6: Graph of Logistic Sigmoid activation function.*
 
 ##### Sigmoid with Temperature
 
@@ -351,8 +358,6 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Use Case:** The temperature parameter allows for tuning the behavior of the sigmoid, making it more or less BTU-like. This can be useful in certain applications where a sharper or smoother transition is desired.
 
-*   [Figure 7: Graph illustrating Sigmoid function with varying temperatures $t$. Show curves for $t=1$, $t \rightarrow 0$, and $t \rightarrow \infty$. (Illustrative graph, not directly from OCR, but conceptually useful)]
-
 ##### Linear Unit
 
 *   **Definition:** The Linear Unit, or identity function, is the simplest activation function where the output is directly proportional to the input.
@@ -364,7 +369,9 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Properties:** Linear, differentiable, and computationally inexpensive. However, using linear units throughout a network results in the entire network being linear, negating the benefits of depth for learning complex patterns. Linear units are typically used in the output layer for regression tasks where the output is expected to be a continuous value.
 
-*   [Figure 8: Graph of Linear Unit activation function. (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/bfc775a3-353f-4b40-b72e-b8e90f6c5c66)
+
+ *Figure 8: Graph of Linear Unit activation function.*
 
 ##### Rectified Linear Unit (ReLU)
 
@@ -377,7 +384,9 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Properties:** Non-linear, computationally efficient, and speeds up training in practice compared to Sigmoid and Tanh. It mitigates the vanishing gradient problem for positive inputs. However, it suffers from the "dying ReLU" problem: if a neuron's weights are updated such that the input to ReLU is always negative, the neuron will output zero and stop learning because the gradient for negative inputs is zero. Not zero-centered.
 
-*   [Figure 9: Graph of Rectified Linear Unit (ReLU) activation function. (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/a7cd3ddf-f75e-4ae6-94ee-aeb7b3b3d488)
+
+  *Figure 9: Graph of Rectified Linear Unit (ReLU) activation function.*
 
 ##### Leaky ReLU
 
@@ -391,7 +400,10 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Properties:** Non-linear, aims to fix the dying ReLU issue by allowing a small, non-zero gradient when the unit is not active (for negative inputs).  Like ReLU, it's computationally efficient and helps with vanishing gradients compared to Sigmoid and Tanh.
 
-*   [Figure 10: Graph of Leaky ReLU activation function with a small positive $\alpha$. (Based on the visual in the provided OCR content)]
+
+![image](https://github.com/user-attachments/assets/d1687421-d08f-4afb-90c3-b320b07d8eb1)
+
+   *Figure 10: Graph of Leaky ReLU activation function with a small positive $\alpha$.*
 
 ##### Hyperbolic Tangent (Tanh)
 
@@ -404,7 +416,9 @@ Here, we detail several common activation functions, including those mentioned i
 
 *   **Properties:**  Output is zero-centered, which can be beneficial as it can lead to faster convergence compared to Sigmoid. Differentiable everywhere.  Like Sigmoid, it also suffers from the vanishing gradient problem, especially for very large positive or negative inputs.
 
-*   [Figure 11: Graph of Hyperbolic Tangent (Tanh) activation function. (Based on the visual in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/79386bc6-ba01-4ca0-92d8-c5bd074fed83)
+
+   *Figure 11: Graph of Hyperbolic Tangent (Tanh) activation function.*
 
 ##### Stochastic Binary Neuron
 
@@ -417,12 +431,6 @@ Here, we detail several common activation functions, including those mentioned i
 *   **Output Range:** Probabilistic binary output, with expected value between 0 and 1.
 
 *   **Properties:** Introduces stochasticity into the network, which can be useful for certain types of models (like Boltzmann Machines or when exploring the loss landscape).  The expectation of the output behaves similarly to a Sigmoid neuron.
-
-*   [Figure 12: Graph conceptually illustrating Stochastic Binary Neuron activation - perhaps showing a sigmoid curve and emphasizing probabilistic output. (Conceptual graph, not directly from OCR, but illustrative)]
-
-#### Visual Comparison of Activation Functions
-
-[Figure 13: A comparative plot showing the graphs of Sigmoid, Tanh, ReLU, and Leaky ReLU on the same axes for visual comparison of their shapes and output ranges. (Composite figure created for comparison)]
 
 #### Choosing the Right Activation Function
 
@@ -450,7 +458,9 @@ Machine learning, and by extension neural network learning, can broadly be categ
     *   **Common Tasks:** Classification (assigning categories or labels to inputs, e.g., image classification, spam detection) and Regression (predicting continuous values, e.g., stock price prediction, house price estimation).
     *   **Example:** Training a neural network to classify images of cats and dogs, where each training image is labeled as either "cat" or "dog".
 
-    [Figure 14: Diagram illustrating Supervised Learning. Show data points labeled with categories, and a model learning to separate these categories. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/529a4059-ab34-473e-b9c8-869fc1c3a35e)
+
+*Figure 14: Diagram illustrating Supervised Learning.*
 
 *   **Unsupervised Learning:**
     *   **Definition:** In unsupervised learning, the model learns from **unlabeled data**. The training dataset only consists of input data without any corresponding output labels. The goal is for the model to discover underlying patterns, structures, or relationships within the data itself.
@@ -458,7 +468,10 @@ Machine learning, and by extension neural network learning, can broadly be categ
     *   **Common Tasks:** Clustering (grouping similar data points together, e.g., customer segmentation), Dimensionality Reduction (reducing the number of variables while preserving essential information, e.g., Principal Component Analysis), Density Estimation (modeling the probability distribution of the data), and Generative Modeling (learning to generate new data instances that are similar to the training data, e.g., Generative Adversarial Networks - GANs, Autoencoders).
     *   **Example:** Using an autoencoder to learn a compressed representation of images without knowing the categories of objects in the images.
 
-    [Figure 15: Diagram illustrating Unsupervised Learning. Show unlabeled data points and a model discovering clusters or structure within the data. (Conceptual diagram)]
+
+![image](https://github.com/user-attachments/assets/c39f2dc0-db15-4ef1-89ca-60310bb146ed)
+
+*Figure 15: Diagram illustrating Unsupervised Learning.*
 
 #### The Perceptron Learning Algorithm: Step-by-Step
 
@@ -497,7 +510,9 @@ Here are the steps of the Perceptron Learning Algorithm, as detailed in your pro
 4.  **Repeat until Convergence:**
     *   Continue iterating through the training examples for multiple epochs until the perceptron correctly classifies all training examples or until a maximum number of epochs is reached. Convergence is guaranteed for linearly separable datasets. If the data is not linearly separable, the algorithm may not converge, and oscillations or continuous weight updates might occur. In such cases, stopping criteria like a maximum number of epochs or monitoring validation error are used.
 
-[Figure 16: Flowchart illustrating the Perceptron Learning Algorithm steps. (Conceptual flowchart)]
+![image](https://github.com/user-attachments/assets/e3f450d4-5e0c-4fc3-a7f0-2c3c96269f3d)
+
+*Figure 16: Flowchart illustrating the Perceptron Learning Algorithm steps.*
 
 #### Information Capacity and Learning Limits
 
@@ -516,12 +531,13 @@ The provided OCR materials briefly touch upon **Spike-Time Dependent Plasticity 
     *   **"Pre before Post" (Causal):** If a pre-synaptic neuron spike slightly *precedes* a post-synaptic neuron spike, the synapse between them is **strengthened (Long-Term Potentiation - LTP)**. This is often interpreted as the pre-synaptic neuron contributing to the firing of the post-synaptic neuron, hence reinforcing the connection.
     *   **"Post before Pre" (Anti-causal):** If a pre-synaptic neuron spike slightly *follows* a post-synaptic neuron spike, the synapse is **weakened (Long-Term Depression - LTD)**. This is seen as the pre-synaptic neuron not contributing to, or even inhibiting, the firing of the post-synaptic neuron, thus weakening the connection.
 
-[Figure 17: Graph illustrating STDP. X-axis: Time difference between Pre-synaptic and Post-synaptic spikes (t_pre - t_post). Y-axis: Change in synaptic weight ($\Delta w_{ij}$). Show curve depicting LTP for positive time differences (pre before post) and LTD for negative time differences (post before pre). (Based on the STDP graph in the provided OCR content)]
+![image](https://github.com/user-attachments/assets/762be1b9-7ec8-4659-9f50-3c41015dbf43)
+
+*Figure 17: Graph illustrating STDP. X-axis: Time difference between Pre-synaptic and Post-synaptic spikes (t_pre - t_post). Y-axis: Change in synaptic weight ($\Delta w_{ij}$). Show curve depicting LTP for positive time differences (pre before post) and LTD for negative time differences (post before pre).*
 
 *   **Biological Plausibility:** STDP is considered more biologically realistic than algorithms like backpropagation (used in training deep networks) because it is a local learning rule: the synaptic change depends only on the activity of the pre-synaptic and post-synaptic neurons, and the timing of their spikes, without requiring global error signals.
 
 *   **Relevance to Deep Learning:** While STDP is not the primary algorithm used to train most deep learning models, it inspires research into more biologically-inspired learning mechanisms for ANNs. Understanding STDP provides insights into how learning might occur in biological systems and could potentially lead to new types of learning algorithms for artificial neural networks in the future.
-
 
 ---
 
@@ -566,7 +582,9 @@ Imagine you are at the top of a hill and you want to get to the valley below in 
     *   **Memory Intensive:** Needs to load the entire dataset into memory.
     *   **May Get Stuck in Sharp Minima:** Can converge to sharp local minima that do not generalize well.
 
-[Figure 18: Illustration of Batch Gradient Descent. Show a smooth loss landscape and the path of GD converging towards the minimum. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/1cbef66c-2744-48ff-a8fc-0bf75822d3cd)
+
+*Figure 18: Illustration of Batch Gradient Descent. Show a smooth loss landscape and the path of GD converging towards the minimum.*
 
 #### Stochastic Gradient Descent (SGD)
 
@@ -592,7 +610,9 @@ Imagine you are at the top of a hill and you want to get to the valley below in 
     *   **Noisy Updates:** The gradient computed for a single example is a noisy estimate of the true gradient over the entire dataset. This leads to oscillations in the loss function and weight updates, making convergence less smooth than Batch GD.
     *   **Convergence can be Erratic:** Due to noisy updates, convergence to the exact minimum is not guaranteed, and SGD may oscillate around the minimum.
 
-[Figure 19: Illustration of Stochastic Gradient Descent. Show a loss landscape and the erratic, noisy path of SGD towards the minimum. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/0bd0920c-6aa1-4e17-92f6-5f113f3dcf84)
+
+*Figure 19: Illustration of Stochastic Gradient Descent. Show a loss landscape and the erratic, noisy path of SGD towards the minimum.*
 
 #### Mini-Batch Gradient Descent
 
@@ -618,7 +638,9 @@ Imagine you are at the top of a hill and you want to get to the valley below in 
 *   **Disadvantages:**
     *   **Hyperparameter Tuning:** Introduces a new hyperparameter – the mini-batch size, which needs to be tuned.
 
-[Figure 20: Illustration of Mini-Batch Gradient Descent. Show a loss landscape and a path that is smoother than SGD but still has some stochasticity, converging towards the minimum more efficiently than Batch GD. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/f5a66e5b-b545-4a96-9d99-29a32ff306e1)
+
+*Figure 20: Illustration of Mini-Batch Gradient Descent.*
 
 #### Learning Rate: Importance and Adaptation
 
@@ -637,7 +659,9 @@ The **learning rate** ($\lambda$) is a crucial hyperparameter in gradient descen
     *   **RMSprop (Root Mean Square Propagation):**  Similar to AdaGrad but addresses its aggressively decreasing learning rate issue by using a moving average of squared gradients.
     *   **ADAM (Adaptive Moment Estimation):** Combines ideas from Momentum and RMSprop. It computes adaptive learning rates for each parameter, using both first-order moments (mean of gradients) and second-order moments (variance of gradients). ADAM is widely used in deep learning due to its effectiveness and robustness across a wide range of problems.
 
-    [Figure 21: Graph illustrating the effect of Learning Rate. Show loss curves for too large LR (oscillating/diverging), too small LR (slow convergence), and a well-tuned LR (efficient convergence). (Conceptual graph)]
+![image](https://github.com/user-attachments/assets/3c395b63-f2a1-4bde-9c2e-fde23035297d)
+
+   *Figure 21: Graph illustrating the effect of Learning Rate.*
 
 #### Momentum: Accelerating and Stabilizing Gradient Descent
 
@@ -663,7 +687,9 @@ The **learning rate** ($\lambda$) is a crucial hyperparameter in gradient descen
     *   **Escape Local Minima:** Helps to overcome small local minima or plateaus by "rolling through" them due to inertia.
     *   **Smoother Updates:**  Averages out gradients over time, leading to smoother and more stable convergence.
 
-    [Figure 22: Illustration of Gradient Descent with Momentum. Show a loss landscape and the path of GD with momentum, showing how it smoothly traverses valleys and overcomes small bumps compared to standard GD. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/54057ddd-0d80-46e9-bbb5-464fbf73a73a)
+
+*Figure 22: Illustration of Gradient Descent with Momentum.*
 
 By using gradient descent and its variants like SGD, mini-batch GD, adaptive learning rates, and momentum, neural networks can effectively learn from data by iteratively adjusting their weights to minimize the cost function, thereby improving their performance on the given task.
 
@@ -702,7 +728,9 @@ Before we can understand backpropagation (the backward pass), we must first unde
     $$z^{(4)} = W^{(3)} y^{(3)} + b^{(4)}, \quad y^{(4)} = g^{(4)}(z^{(4)})$$
     Here, $y^{(4)}$ is the network's output, and $g^{(2)}, g^{(3)}, g^{(4)}$ are the activation functions for layers 2, 3, and 4 respectively.  Note that $W^{(k)}$ is the weight matrix connecting layer $k$ to layer $k+1$.
 
-[Figure 23: Diagram illustrating the Forward Pass in a Neural Network. Show a network with multiple layers, and arrows indicating the flow of computation from input to output. Highlight the weighted sum and activation function at each layer. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/3e40d9d9-030c-40e0-b2ad-75ae5e608955)
+
+*Figure 23: Diagram illustrating the Forward Pass in a Neural Network.*
 
 #### Backward Pass: Propagating Error Gradients
 
@@ -734,7 +762,9 @@ The **backward pass** is the core of backpropagation. Once the output of the net
 
 *   **Delta Values ($\delta$)**: As highlighted in the provided document, delta values are crucial in backpropagation.  For the output layer, $\delta^{(L)}$ directly relates to the error. For hidden layers, $\delta^{(l)}$ acts as an "error signal" that is backpropagated, summarizing how much each neuron in layer $l$ contributed to the error in the final output. The computation of $\delta^{(l)}$ involves summing up the "weighted errors" from the next layer $(l+1)$, weighted by the connection strengths $W^{(l)}$, and scaled by the derivative of the activation function at layer $l$.
 
-[Figure 24: Diagram illustrating the Backward Pass (Backpropagation). Show a network with multiple layers, and arrows indicating the backward flow of error gradients from output to input. Highlight the computation of delta values at each layer and the use of chain rule. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/11e13a1e-af33-4a29-badb-17199320000e)
+
+*Figure 24: Diagram illustrating the Backward Pass (Backpropagation).*
 
 #### Non-Linear Activation Functions
 
@@ -817,7 +847,9 @@ Here, we will discuss two fundamental cost functions commonly used in neural net
     *   When you want to penalize larger errors more significantly.
     *   When the assumption of Gaussian noise on the target variable is reasonable.
 
-*   [Figure 25: Graph conceptually illustrating the MSE cost function. Show a curve or surface representing MSE as a function of prediction error, emphasizing the squared relationship and sensitivity to larger errors. (Conceptual graph)]
+![image](https://github.com/user-attachments/assets/ddcc54d0-7c50-4bc0-9ff5-d98dfceba84c)
+
+*   *Figure 25: Graph conceptually illustrating the MSE cost function.*
 
 #### Cross-Entropy Loss (CE)
 
@@ -856,7 +888,9 @@ Here, we will discuss two fundamental cost functions commonly used in neural net
     *   When the output layer uses Sigmoid (for binary) or Softmax (for multi-class) activation functions to produce probabilities.
     *   When you want to optimize for correct class probabilities, especially in cases where class probabilities are meaningful (e.g., in well-calibrated classifiers).
 
-*   [Figure 26: Graph conceptually illustrating the Cross-Entropy Loss function for binary classification. Show curves of CE loss as a function of predicted probability $y$ for both cases: true label $t=1$ and true label $t=0$, emphasizing how loss increases as prediction deviates from the true label. (Conceptual graph)]
+![image](https://github.com/user-attachments/assets/6084277a-ae63-4bda-97c7-d47bffc8a1fd)
+
+*   *Figure 26: Graph conceptually illustrating the Cross-Entropy Loss function for binary classification.*
 
 #### Choosing the Right Cost Function
 
@@ -894,7 +928,9 @@ The choice of cost function should align with the task's objective and the natur
     *   **Complex Model:** Overfit models are often overly complex, having too many parameters relative to the amount of training data. They have the capacity to memorize the training set but lack the ability to generalize.
     *   **Complex Decision Boundaries:** In classification, overfit models often create very complex and irregular decision boundaries that are tailored too closely to the training data points, rather than smooth, general boundaries.
 
-[Figure 27: Graph illustrating Overfitting. Show two plots: one showing good fit (generalization) with a smooth decision boundary, and another showing overfitting with a complex, wiggly decision boundary that perfectly separates training data but is likely to perform poorly on new data. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/ff369f1b-a30a-4acc-9cd3-0351254c43c5)
+
+*Figure 27: Graph illustrating Overfitting.*
 
 #### Regularization: The Key to Generalization
 
@@ -954,7 +990,9 @@ Common regularization techniques in neural networks include:
     *   **L2 Regularization:** More common and generally works well for preventing overfitting and improving generalization in most scenarios. It leads to weights being small but rarely exactly zero.
     *   **L1 Regularization:** Useful when you want to achieve sparsity in the model weights, effectively performing feature selection. It can lead to more interpretable models with fewer active features. However, it can be less smooth to optimize than L2 regularization.
 
-[Figure 28: Illustration comparing L1 and L2 Regularization. Show a 2D weight space with contours of the Loss function and constraint regions for L1 (diamond) and L2 (circle). Show how L1 tends to push weights to axes (sparse), while L2 shrinks weights towards origin (small, diffuse). (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/aa717bce-7e44-4b13-bd10-43029585f1ec)
+
+*Figure 28: Illustration comparing L1 and L2 Regularization.*
 
 #### Dropout Regularization
 
@@ -976,7 +1014,9 @@ Common regularization techniques in neural networks include:
 
 *   **Analogy:** Dropout can be likened to training a team of experts where each expert (neuron) is trained to perform well even when some other experts are temporarily unavailable. This makes each expert more versatile and less reliant on specific colleagues, leading to a more robust and generalizable team performance.
 
-[Figure 29: Illustration of Dropout Regularization. Show a neural network and highlight how neurons and connections are randomly dropped out during training. Show different network configurations in different training iterations due to dropout. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/f1cb25b0-540c-4f16-9efb-f68b7cdee9e4)
+
+*Figure 29: Illustration of Dropout Regularization.*
 
 #### Early Stopping
 
@@ -998,7 +1038,9 @@ Common regularization techniques in neural networks include:
     *   **Choosing When to Stop:** Determining the exact point to stop training can sometimes be tricky.  Stopping too early might prevent the model from reaching its full potential, while stopping too late leads to overfitting. Common strategies include patience (waiting for validation loss to increase for a certain number of epochs) or using techniques like "minimum validation loss plus one standard deviation" as a stopping criterion.
     *   **Validation Set Representativeness:** The effectiveness of early stopping depends on how representative the validation set is of the test set and the overall data distribution.
 
-[Figure 30: Graph illustrating Early Stopping. Show training loss and validation loss curves over epochs. Highlight the point where validation loss starts increasing, indicating overfitting, and the point where training is stopped and best weights are restored. (Conceptual graph)]
+![image](https://github.com/user-attachments/assets/e34d49fe-c071-4c59-8a5b-ff2feb9445db)
+
+*Figure 30: Graph illustrating Early Stopping.*
 
 #### Data Augmentation and Noise Injection
 
@@ -1030,7 +1072,10 @@ Common regularization techniques in neural networks include:
     *   **Appropriate Augmentations:** The choice of augmentation techniques should be relevant to the task and data type. Applying inappropriate augmentations can degrade performance.
     *   **Augmentation Strength:** The strength or intensity of augmentations (e.g., rotation angle, noise level) needs to be carefully chosen. Too strong augmentations can make the task too difficult or lead to underfitting.
 
-[Figure 31: Illustration of Data Augmentation and Noise Injection. Show examples of original images and their augmented versions (rotated, flipped, zoomed, etc.). Also, illustrate adding noise to input data. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/4eccdd9f-62a9-4d97-99ca-46d95a853fc0)
+
+
+*Figure 31: Illustration of Data Augmentation and Noise Injection Methods in PyTorch.*
 
 By employing regularization techniques like L1/L2 regularization, Dropout, Early Stopping, Data Augmentation, and Noise Injection, we can effectively combat overfitting and train neural networks that generalize well to unseen data, making them more robust and useful in real-world applications.
 
@@ -1067,7 +1112,9 @@ The **Vanishing Gradient Problem** is a significant challenge in training deep n
     *   **Difficulty Learning Long-Range Dependencies:** In RNNs, vanishing gradients make it hard to learn long-range dependencies in sequential data, as information from earlier time steps is not effectively propagated to influence later steps.
     *   **Ineffective Deep Networks:** Deep networks become no more powerful than shallow networks, negating the advantage of depth.
 
-[Figure 32: Graph conceptually illustrating Vanishing Gradients. Show a deep neural network and how gradient magnitudes decrease as backpropagation goes deeper into the network. Use color intensity to represent gradient magnitude, fading towards the input layer. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/01bb84c1-6b68-485b-8391-f634c9746a39)
+
+*Figure 32: Graph conceptually illustrating Vanishing Gradients.*
 
 #### The Exploding Gradient Problem
 
@@ -1082,7 +1129,9 @@ The **Exploding Gradient Problem** is the opposite of vanishing gradients. It oc
     *   **NaN Values:** In extreme cases, gradients can become so large that they result in numerical overflow, leading to "NaN" (Not a Number) values in weights and loss, completely disrupting training.
     *   **Poor Performance:** The model fails to converge to a good solution due to unstable and erratic weight updates.
 
-[Figure 33: Graph conceptually illustrating Exploding Gradients. Show a deep neural network and how gradient magnitudes increase exponentially as backpropagation goes deeper into the network. Use color intensity to represent gradient magnitude, becoming very intense towards the input layer, potentially overflowing. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/79565bf2-1d37-4c1f-bf6f-9f891cdb83b7)
+
+*Figure 33: Graph conceptually illustrating Exploding Gradients opposed to vanishing Gradients.*
 
 #### Weight Initialization Strategies (Xavier/He)
 
@@ -1124,7 +1173,9 @@ Using **Non-Saturating Activation Functions** like ReLU (Rectified Linear Unit) 
     *   **Sigmoid and Tanh:** As discussed, Sigmoid and Tanh activations have derivatives that are bounded between 0 and 0.25 (Sigmoid) and 0 and 1 (Tanh), but are less than 1 for most of their input range and approach 0 for large magnitudes. Repeated multiplication of these small derivatives leads to vanishing gradients in deep networks.
     *   **ReLU and Leaky ReLU:**  The derivative of ReLU is 1 for positive inputs, and Leaky ReLU has a non-zero derivative everywhere. These properties help to maintain stronger gradients and alleviate the vanishing gradient issue, making them more suitable for training deep networks than Sigmoid or Tanh.
 
-[Figure 34: Comparison of Activation Function Derivatives. Show plots of derivatives for Sigmoid, Tanh, ReLU, and Leaky ReLU. Highlight how ReLU and Leaky ReLU maintain non-zero derivatives for a larger range of inputs compared to Sigmoid and Tanh, especially for positive inputs for ReLU and across the range for Leaky ReLU. (Composite graph for comparison)]
+![image](https://github.com/user-attachments/assets/2a188ef7-44ce-4664-8348-752523204320)
+
+*Figure 34: Comparison of Activation Function Derivatives.*
 
 #### Gradient Clipping: Addressing Exploding Gradients
 
@@ -1152,7 +1203,9 @@ Using **Non-Saturating Activation Functions** like ReLU (Rectified Linear Unit) 
 
 *   **Hyperparameter: Clipping Threshold:** The clipping threshold is a hyperparameter that needs to be tuned.  A too small threshold might clip gradients too aggressively, hindering learning, while a too large threshold might not effectively prevent exploding gradients.
 
-[Figure 35: Illustration of Gradient Clipping. Show a gradient vector before clipping (long arrow) and after clipping (shorter arrow within a threshold circle), indicating how clipping limits the magnitude of the gradient. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/0d5ebb41-b6d5-43c4-b652-104c02c4f0d4)
+
+*Figure 35: Illustration of Gradient Clipping.*
 
 By using techniques like proper weight initialization, non-saturating activation functions, and gradient clipping, the challenges of vanishing and exploding gradients in deep networks can be effectively addressed, allowing for the training of very deep and complex models.
 
@@ -1176,7 +1229,9 @@ The **Problem of Local Minima** is a classic challenge in optimization, and it's
 
 *   **Saddle Points:** While local minima are a concern, in high-dimensional spaces like those in deep learning, it's argued that **saddle points** are often a more prevalent issue than true local minima. Saddle points are points where the gradient is zero, but they are not minima; they are minima in some directions and maxima in other directions. Gradient descent can also get "stuck" near saddle points, especially in flat regions surrounding them.
 
-[Figure 36: Illustration of Loss Landscape with Local Minima and Global Minimum. Show a 2D or 3D loss landscape with multiple valleys. Highlight a global minimum (deepest valley) and several local minima (shallower valleys). Show a path of gradient descent getting stuck in a local minimum instead of reaching the global minimum. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/2602d03f-e7e7-4657-9d97-ab29e886dfc7)
+
+*Figure 36: Illustration of Loss Landscape with Local Minima and Global Minimum.*
 
 #### Strategies to Escape Local Minima
 
@@ -1192,7 +1247,9 @@ While there is no foolproof method to guarantee finding the global minimum in no
 
 *   **Random Restarts (Multiple Initializations):** A simple but sometimes effective strategy is to train the neural network multiple times with **different random initializations** of the weights. Since different initializations can lead gradient descent to converge to different local minima, training multiple models and selecting the one that performs best on a validation set (or averaging their predictions in an ensemble) can increase the chances of finding a better solution overall.
 
-*   [Figure 37: Illustration of Strategies to Escape Local Minima. Show a loss landscape with local minima and global minimum. Show paths of: (a) Standard GD getting stuck in a local minimum, (b) GD with Momentum overcoming a barrier and potentially reaching a better minimum, (c) SGD's noisy path allowing it to jump out of a shallow local minimum. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/e6872e39-7a56-4041-ba8e-dd114da195f8)
+
+   *Figure 37: Illustration of Strategies to Escape Local Minima.
 
 #### Adaptive Learning Rates (ADAM, AdaGrad)
 
@@ -1228,14 +1285,16 @@ While there is no foolproof method to guarantee finding the global minimum in no
     *   **Dropout as Ensemble Approximation:** Dropout, during training, can be viewed as training an ensemble of thinned networks. At test time, using all neurons can be seen as averaging predictions from this ensemble.
     *   **Model Averaging:** Train multiple models independently and then simply average their weights or predictions.
 
-[Figure 38: Illustration of Ensemble Methods. Show multiple neural networks trained independently. Show how their predictions are combined (averaged or voted) to produce a final, more robust prediction. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/a836847e-6815-4f0c-9f80-388076cfd534)
+
+*Figure 38: Illustration of Ensemble Methods.
 
 While local minima and other optimization challenges remain active research areas in deep learning, the techniques discussed in this section – momentum, stochasticity, adaptive learning rates, ensemble methods – provide practical tools to train effective neural networks and mitigate the impact of these challenges in many applications.
 
 ---
 
 ## IV. Deep Learning Architectures
-
+[![image](https://github.com/user-attachments/assets/debcf53e-b47a-412e-a121-f102461190fc)](https://www.youtube.com/watch?v=aircAruvnKk&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=1)
 ### 11. Deep Architectures and Layer-wise Training
 
 #### The Power of Depth in Neural Networks
@@ -1250,7 +1309,9 @@ While local minima and other optimization challenges remain active research area
 
 *   **Examples of Deep Architectures:** Modern deep learning success stories, such as Convolutional Neural Networks (CNNs) for image recognition, Recurrent Neural Networks (RNNs) and Transformers for natural language processing, and deep autoencoders for unsupervised learning, all rely on deep architectures.
 
-[Figure 39: Diagram illustrating Hierarchical Feature Learning in Deep Networks. Show a deep network with multiple layers. Illustrate how early layers detect simple features (edges, textures), intermediate layers combine them into parts (object parts), and deeper layers assemble parts into whole objects or scenes. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/e3334a2a-ffd6-4fdf-9ff6-c9f7da47bda8)
+
+[Figure 39: Diagram illustrating Hierarchical Feature Learning in Deep Networks.
 
 #### Autoencoders: Unsupervised Feature Learning
 
@@ -1266,7 +1327,9 @@ While local minima and other optimization challenges remain active research area
 
 *   **Unsupervised Feature Learning:** Autoencoders are unsupervised because they learn from unlabeled data. They do not require explicit labels or target outputs; the target output is the input itself. This makes them useful for tasks like dimensionality reduction, feature extraction, data denoising, and anomaly detection, especially when labeled data is scarce.
 
-[Figure 40: Diagram of a Basic Autoencoder Architecture. Show an Encoder part (input to bottleneck layer) and a Decoder part (bottleneck layer to output/reconstruction). Indicate Input X, Encoded representation (Code), and Reconstructed Output X'. Highlight the Bottleneck Layer. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/15109a13-c267-42e5-828e-a356600353ab)
+
+*Figure 40: Diagram of a Basic Autoencoder Architecture.*
 
 #### Bottleneck Layer: Compression and Feature Extraction
 
@@ -1282,7 +1345,9 @@ The **Bottleneck Layer** is a crucial component of many autoencoder architecture
 
 *   **Types of Bottleneck Layers:** The bottleneck layer can be a fully connected layer, a convolutional layer (in convolutional autoencoders), or even a recurrent layer (in sequence autoencoders), depending on the type of data and architecture.
 
-[Figure 41: Diagram specifically highlighting the Bottleneck Layer in an Autoencoder. Emphasize its role as a lower-dimensional representation space and as a point of information compression and feature extraction. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/468a37ef-358e-45e5-95a5-1e46d652a550)
+
+*Figure 41: Diagram specifically highlighting the Bottleneck Layer in an Autoencoder.*
 
 #### Layer-wise Pre-training for Deep Autoencoders
 
@@ -1302,7 +1367,9 @@ Training very deep autoencoders (or very deep networks in general) can be challe
 
 *   **Decline in Use:** With the advent of better initialization schemes (like Xavier/He initialization), non-saturating activation functions (ReLU), Batch Normalization, and more effective end-to-end training methods, layer-wise pre-training has become less essential and is not as commonly used in modern deep learning practice, especially for tasks where large labeled datasets are available. End-to-end training of deep networks using backpropagation with modern techniques often works effectively without pre-training. However, layer-wise pre-training remains a valuable concept in the history of deep learning and provides insights into training deep architectures.
 
-[Figure 42: Diagram illustrating Layer-wise Pre-training of a Stacked Autoencoder. Show a step-by-step process: training first layer autoencoder, then second layer autoencoder on top of the first encoder's output, and so on. Finally, show stacking of encoders and decoders for end-to-end fine-tuning. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/81228c8d-d9cd-4bdf-b8d5-caab6939497b)
+
+*Figure 42: Diagram illustrating Layer-wise Pre-training of a Stacked Autoencoder.*
 
 #### Stacked Autoencoders
 
@@ -1338,7 +1405,9 @@ While layer-wise pre-training is less emphasized in current deep learning practi
 
 *   **Efficiency and Effectiveness:** CNNs are efficient in terms of parameter usage and computation, especially compared to fully connected networks when dealing with high-dimensional inputs like images. Their architectural biases (local connectivity, parameter sharing) align well with the nature of image data, enabling them to learn robust and relevant features for visual tasks.
 
-[Figure 44: Diagram illustrating a typical CNN architecture for image classification. Show input image, convolutional layers, pooling layers, fully connected layers, and final output classification. Highlight the flow of data and feature extraction process. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/4fca084e-a2f5-40ca-8baf-4d7f8b66e473)
+
+*Figure 44: Diagram illustrating a typical CNN architecture for image classification. 
 
 #### Convolutional Layers: Feature Extraction with Filters
 
@@ -1363,7 +1432,9 @@ While layer-wise pre-training is less emphasized in current deep learning practi
     $$W_2 = \frac{(W_1 - F + 2P)}{S} + 1$$
     $$H_2 = \frac{(H_1 - F + 2P)}{S} + 1$$
 
-*   [Figure 45: Diagram illustrating the Convolution Operation. Show an input image, a filter/kernel, and how the filter slides across the input, performing element-wise multiplication and summation to produce an output feature map. Show the concepts of stride and padding. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/a19d50c8-329b-4b82-b9af-720bccda9f8e)
+
+*  *Figure 45: Diagram illustrating the Convolution Operation.*
 
 #### Parameter Sharing and Local Connectivity
 
@@ -1378,7 +1449,9 @@ CNNs achieve efficiency and effective feature learning through two key principle
     *   **Local Receptive Field:** Each neuron in a convolutional layer is connected only to a small local region in the input volume, defined by the size of the filter (e.g., a 3x3 filter means each neuron is connected to a 3x3 local region). This is local connectivity or sparse connectivity (compared to fully connected layers where each neuron is connected to all neurons in the previous layer).
     *   **Exploiting Spatial Locality:** Local connectivity is based on the assumption that in images (and other spatial data), nearby pixels are more correlated and form meaningful local patterns. By focusing on local regions, convolutional layers can efficiently detect local features and patterns without needing to process the entire input at once.
 
-[Figure 46: Diagram illustrating Parameter Sharing and Local Connectivity in a Convolutional Layer. (a) Show a fully connected layer with dense connections and many parameters. (b) Show a convolutional layer with local connections (filter size) and shared filter weights, highlighting the reduced number of parameters. (Comparative diagram)]
+![image](https://github.com/user-attachments/assets/06b07f8e-f0a9-40a8-9565-be1fb16b49ae)
+
+*Figure 46: Diagram illustrating Parameter Sharing and Local Connectivity in a Convolutional Layer.
 
 #### Receptive Field in CNNs
 
@@ -1390,7 +1463,9 @@ The **Receptive Field** of a neuron in a CNN is the region in the input space (e
 
 *   **Importance of Large Receptive Field:** A larger receptive field allows neurons in deeper layers to capture more global and complex features, as they can "see" a wider context in the input image. For tasks like object detection or scene understanding, capturing features at different scales and contexts (from local details to global structures) is crucial, and the growing receptive field in CNNs enables this hierarchical feature integration.
 
-[Figure 47: Diagram illustrating the Receptive Field in CNNs. Show a deep CNN with multiple layers. Trace back connections from a neuron in a deeper layer to the input layer, highlighting the increasingly larger receptive field at deeper layers. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/633dd4b8-979a-4e0b-8e06-3c000099a923)
+
+*Figure 47: Diagram illustrating the Receptive Field in CNNs.*
 
 #### Pooling Layers: Downsampling and Invariance
 
@@ -1408,7 +1483,9 @@ The **Receptive Field** of a neuron in a CNN is the region in the input space (e
 
 *   **Reducing Overfitting:** By downsampling feature maps, pooling layers also help to reduce overfitting by decreasing the number of parameters and making the network less sensitive to fine-grained details in the training data.
 
-[Figure 48: Diagram illustrating Pooling Operations (Max Pooling and Average Pooling). Show an input feature map and how a pooling window (e.g., 2x2) slides across it, performing Max or Average pooling within each window to produce a downsampled output feature map. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/b13c6c7d-a972-4b2a-8490-5fd2f22770fd)
+
+*Figure 48: Diagram illustrating Pooling Operations*
 
 #### Translation Invariance in CNNs
 
@@ -1431,7 +1508,9 @@ Modern CNN architectures often go beyond simple stacks of convolutional and pool
     *   **Addressing Vanishing Gradients in Very Deep Networks:** Skip connections help to mitigate the vanishing gradient problem in very deep networks by providing alternative paths for gradients to flow directly through the network, bypassing multiple layers. This makes it possible to train networks with hundreds or even thousands of layers.
     *   **Identity Mapping:** In a residual block, the skip connection often implements an "identity mapping," simply adding the input to the output without any weights. This allows the network to learn identity functions, making it easier to train deeper models.
 
-    [Figure 49: Diagram illustrating a Residual Block (ResNet Block). Show input, a few convolutional layers (e.g., two or three), and a skip connection adding the original input to the output of these layers. Show the "identity mapping" concept. (Conceptual diagram)]
+![image](https://github.com/user-attachments/assets/35e59f34-4229-437b-84cb-24bd3eb91323)
+
+    *Figure 49: Diagram illustrating a Residual Block (ResNet Block).*
 
 *   **Inception Modules (GoogLeNet, Inception-v3, etc.):**
     *   **Multi-Scale Feature Extraction:** Inception modules are designed to extract features at multiple scales within each layer. They use parallel branches of convolutional operations with different filter sizes (e.g., 1x1, 3x3, 5x5) and pooling operations within the same module.
@@ -1463,7 +1542,9 @@ Modern CNN architectures often combine these and other innovations (like Batch N
 
 *   **Processing Sequences Step-by-Step:** RNNs process sequences step-by-step, from the beginning to the end (or in both directions for bidirectional RNNs). At each time step, the RNN receives an input from the sequence and updates its hidden state based on the current input and the previous hidden state. The output of the RNN at each time step can depend on the entire history of inputs processed so far.
 
-[Figure 51: Diagram illustrating a Recurrent Neural Network (RNN) Unrolled Through Time. (a) Show a folded RNN with a recurrent loop. (b) Show the unfolded RNN over several time steps (t-1, t, t+1), illustrating how the hidden state is passed from one time step to the next, and how input and output are processed at each step. (Comparative diagram - folded vs. unfolded RNN)]
+![image](https://github.com/user-attachments/assets/9f1e8267-dfcb-4ef9-a144-2e553f50d3a6)
+
+*Figure 51: Diagram illustrating a Recurrent Neural Network (RNN) Unrolled Through Time.*
 
 #### RNN Fundamentals: Hidden State and Temporal Context
 
@@ -1503,7 +1584,9 @@ The computation in a basic RNN at each time step $t$ can be mathematically repre
         *   For regression tasks, $g$ might be a linear activation or identity function.
         *   In some RNNs, there might be no output at every time step, or the output might be directly taken as the hidden state ($y_t = s_t$ or even $y_t = z_t$ before applying the hidden state activation $f$).
 
-[Figure 52: Diagram illustrating the Mathematical Operations in an RNN Cell at a single time step $t$. Show input $x_t$, previous hidden state $s_{t-1}$, weight matrices U, W, V, activation functions f and g, and output $y_t$. Highlight the matrix multiplications and activation functions involved in computing $s_t$ and $y_t$. (Diagram of a single RNN cell)]
+![image](https://github.com/user-attachments/assets/a853d32c-49d7-4750-b96f-b2ad52021286)
+
+*Figure 52: Diagram illustrating the Mathematical Operations in an RNN Cell at a single time step $t$.*
 
 #### Types of RNN Architectures
 
@@ -1534,7 +1617,9 @@ RNNs can be arranged in various architectures depending on the nature of the inp
         *   **Text Summarization:** Generating a shorter summary (output sequence) from a longer document (input sequence).
         *   **Speech Recognition (in some models):** Transcribing an audio sequence (input) to a text sequence (output).
 
-[Figure 53: Diagram illustrating different types of RNN Architectures. Show schematic diagrams for One-to-One (Standard FF), One-to-Many (Image Captioning), Many-to-One (Sentiment Analysis), Many-to-Many Synchronized (POS Tagging), and Many-to-Many Unsynchronized (Machine Translation - Encoder-Decoder). (Comparative diagram of RNN architectures)]
+![image](https://github.com/user-attachments/assets/bdd5c96c-e9f9-44b0-bce7-784085c47b4a)
+
+*Figure 53: Diagram illustrating different types of RNN Architectures.*
 
 #### Bidirectional RNNs: Leveraging Past and Future Context
 
@@ -1556,7 +1641,9 @@ RNNs can be arranged in various architectures depending on the nature of the inp
     *   **Utilizing Future Context:** Bi-RNNs can utilize information from both the past and the future when making a prediction at a given time step. This is particularly useful in tasks where understanding the context from both directions is important, such as in natural language processing for tasks like part-of-speech tagging, named entity recognition, or filling in missing words in a sentence. For example, to understand the meaning of a word in a sentence, it's often helpful to consider the words both before and after it.
     *   **Improved Accuracy:** In many sequence processing tasks, Bi-RNNs can achieve higher accuracy compared to unidirectional RNNs because of their ability to leverage bidirectional context.
 
-[Figure 54: Diagram illustrating a Bidirectional RNN (Bi-RNN). Show two RNNs, one processing input forward and another processing input backward. Show how their hidden states are combined at each time step to get a bidirectional representation. (Conceptual diagram of Bi-RNN)]
+![image](https://github.com/user-attachments/assets/dfb370b8-1e37-43ba-b1c8-321749b0b191)
+
+*Figure 54: Diagram illustrating a Bidirectional RNN (Bi-RNN).*
 
 #### Backpropagation Through Time (BPTT)
 
@@ -1576,7 +1663,9 @@ RNNs can be arranged in various architectures depending on the nature of the inp
 
 *   **Truncated BPTT:** For very long sequences, performing full BPTT can be computationally expensive and memory-intensive, as it requires unfolding the network for the entire sequence length. **Truncated Backpropagation Through Time (TBPTT)** is a practical approximation used to train RNNs on long sequences. In TBPTT, we limit the length of the unfolded network to a fixed number of time steps (a "window" of time). We perform forward and backward passes only within this limited window and update weights based on gradients computed within this window. We then slide this window through the sequence and repeat the process. TBPTT reduces computational cost and memory requirements but might limit the RNN's ability to learn very long-range dependencies beyond the truncation window.
 
-[Figure 55: Diagram illustrating Backpropagation Through Time (BPTT). Show an unfolded RNN over time steps. Indicate the forward pass and the backward pass of error gradients through the unfolded network. Highlight the accumulation of gradients for shared weights across time steps. (Conceptual diagram of BPTT)]
+![image](https://github.com/user-attachments/assets/884be906-1655-4a53-a684-21bde2674f36)
+
+*Figure 55: Diagram illustrating Backpropagation Through Time (BPTT).*
 
 #### Limitations of Vanilla RNNs: Vanishing Gradients in Time
 
@@ -1649,7 +1738,9 @@ The **Long Short-Term Memory (LSTM)** network, introduced by Hochreiter and Schm
 
     Here, $W_f, W_i, W_C, W_o$ are weight matrices, and $b_f, b_i, b_C, b_o$ are bias vectors that are learned during training.
 
-[Figure 56: Diagram illustrating the Architecture of an LSTM Cell. Show the cell state ($C_t$), hidden state ($h_t$), input $x_t$, forget gate ($f_t$), input gate ($i_t$), candidate cell state ($\tilde{C}_t$), output gate ($o_t$), and how they interact with each other and the weight matrices and activation functions (sigmoid and tanh). Clearly label each component and the data flow. (Detailed diagram of LSTM cell)]
+![image](https://github.com/user-attachments/assets/71754572-f3f0-437b-8695-52c5ff02b9c9)
+
+*Figure 56: Diagram illustrating the Architecture of an LSTM Cell.*
 
 ##### Variants of LSTM: PeepHole Connections
 
@@ -1677,7 +1768,9 @@ One common variation of the standard LSTM is the LSTM with **Peephole Connection
 
 *   **Impact:** Peephole connections can sometimes improve the performance of LSTMs in certain tasks, but the standard LSTM architecture without peepholes is also highly effective and widely used.
 
-[Figure 57: Diagram illustrating an LSTM Cell with Peephole Connections. Highlight the peephole connections from the cell state ($C_{t-1}$ or $C_t$) to the forget, input, and output gates. Show how these connections provide additional information to the gates. (Diagram of LSTM cell with peepholes)]
+![image](https://github.com/user-attachments/assets/7ebca552-f76e-4549-b82e-20b39453f45e)
+
+*Figure 57: Diagram illustrating an LSTM Cell with Peephole Connections.*
 
 #### Gated Recurrent Unit (GRU) Architecture
 
@@ -1708,7 +1801,9 @@ The **Gated Recurrent Unit (GRU)**, introduced by Cho et al. in 2014, is another
 
     Here, $W_z, W_r, W$ are weight matrices, and $b_z, b_r, b$ are bias vectors that are learned during training.
 
-[Figure 58: Diagram illustrating the Architecture of a GRU Cell. Show hidden state ($h_t$), input $x_t$, update gate ($z_t$), reset gate ($r_t$), candidate hidden state ($\tilde{h}_t$), and how they interact with each other and the weight matrices and activation functions (sigmoid and tanh). Clearly label each component and the data flow. (Detailed diagram of GRU cell)]
+![image](https://github.com/user-attachments/assets/5a66c837-1bdd-440c-89c9-6bf552c9823a)
+
+*Figure 58: Diagram illustrating the Architecture of a GRU Cell.*
 
 #### LSTM vs. GRU: Performance and Computational Efficiency
 
@@ -1749,7 +1844,9 @@ The concept of gating mechanisms, central to LSTMs and GRUs for controlling info
     *   **Training Deeper Networks:** Highway networks, like ResNets, facilitate training of very deep feedforward networks by allowing gradients to flow more easily through the network via the highway connections, mitigating vanishing gradients.
     *   **Adaptive Depth:** The gating mechanism allows layers to behave more like non-linear transformations or more like simple identity connections, adaptively adjusting the effective depth of the network based on the input.
 
-[Figure 59: Diagram illustrating a Highway Network Layer. Show input $x$, non-linear transformation path $H(x, W_H)$, transform gate $T(x, W_T)$, carry gate $C(x, W_C) = 1 - T(x, W_T)$, and how the output $y$ is a gated combination of $H(x, W_H)$ and $x$. (Diagram of a Highway layer)]
+![image](https://github.com/user-attachments/assets/410683ae-7d9f-4275-ab5a-f7da95eea4c0)
+
+*Figure 59: Diagram illustrating a Highway Network Layer.*
 
 While Highway Networks are less widely used than ResNets or LSTMs/GRUs, they represent an interesting approach to using gating mechanisms in feedforward networks to enable training of deeper models. The gating concept, originally developed for RNNs (LSTMs, GRUs) to manage temporal information flow, has thus found applications in feedforward architectures as well for managing information flow through network depth.
 
@@ -1782,7 +1879,9 @@ The core idea behind **Attention Mechanisms** is to allow the model to **attend*
 
 *   **Interpretability:** Attention mechanisms can also provide some degree of interpretability. By examining the attention weights, we can get insights into which parts of the input sequence the model is focusing on when making predictions. This can be useful for understanding the model's behavior and for debugging.
 
-[Figure 60: Diagram conceptually illustrating the Attention Mechanism Principle. Show an Encoder-Decoder architecture with an Attention Mechanism. Highlight how, for each output word being generated by the Decoder, the Attention Mechanism dynamically focuses on different parts of the Input Sequence (Encoder outputs) and creates a context vector based on attention weights. (Conceptual diagram of Attention in Encoder-Decoder)]
+![image](https://github.com/user-attachments/assets/591b0b1e-59a8-4c83-8336-a4d8cf0361da)
+
+*Figure 60: Diagram conceptually illustrating the Attention Mechanism Principle.*
 
 #### Query, Key, Value Attention Design
 
@@ -1810,7 +1909,9 @@ Most attention mechanisms are based on the **Query, Key, Value** framework, insp
 
     The output of the attention mechanism is this context vector, which is a weighted combination of the values, weighted by the relevance scores (attention weights) determined by the queries and keys.
 
-[Figure 61: Diagram illustrating the Query, Key, Value Attention Mechanism. Show Query, Keys, Values as input vectors. Show the process of calculating Attention Scores (dot product, scaling, softmax) and then computing the Context Vector as a weighted sum of Values using Attention Weights. (Diagram of QKV Attention)]
+![image](https://github.com/user-attachments/assets/420eb4d0-e355-4a92-b6e9-a9033c689d1f)
+
+*Figure 61: Diagram illustrating the Query, Key, Value Attention Mechanism.*
 
 #### Self-Attention: Capturing Intra-Sequence Relationships
 
@@ -1826,7 +1927,9 @@ Most attention mechanisms are based on the **Query, Key, Value** framework, insp
 
 *   **Example in Machine Translation:** In machine translation, when translating a word, self-attention allows the model to attend to other words in the same input sentence to understand the context and relationships between words within the sentence itself, before even considering the decoder and target language.
 
-[Figure 62: Diagram illustrating Self-Attention Mechanism. Show an input sequence. Indicate how Queries, Keys, and Values are derived from the input sequence itself. Show how each position in the sequence attends to all other positions to compute a context-aware representation. (Diagram of Self-Attention)]
+![image](https://github.com/user-attachments/assets/8013b321-1551-459e-a755-3904924e3191)
+
+*Figure 62: Diagram illustrating Self-Attention Mechanism.*
 
 #### Transformer Architecture: Attention is All You Need
 
@@ -1849,7 +1952,9 @@ The **Transformer** architecture, introduced in the seminal paper "Attention is 
 
 *   **Parallel Processing and Efficiency:** Transformers process the entire input sequence in parallel, thanks to self-attention, which is a major advantage over sequential RNNs, leading to significantly faster training and inference, especially for long sequences.
 
-[Figure 63: Diagram illustrating the Transformer Architecture (Encoder and Decoder). Show the overall encoder-decoder structure. Detail the components of Encoder Layer (Multi-Head Self-Attention, Feedforward, Residuals, LayerNorm) and Decoder Layer (Masked Multi-Head Self-Attention, Encoder-Decoder Attention, Feedforward, Residuals, LayerNorm). Highlight Positional Encoding in the input. (Detailed Transformer Architecture diagram)]
+![image](https://github.com/user-attachments/assets/ef02b4e7-2048-4c38-9299-64a52a816580)
+
+*Figure 63: Diagram illustrating the Transformer Architecture (Encoder and Decoder).*
 
 ##### Multi-Head Attention: Capturing Diverse Relationships
 
@@ -1869,7 +1974,9 @@ The **Transformer** architecture, introduced in the seminal paper "Attention is 
     *   **More Expressive Representation:** Multi-head attention provides a richer and more expressive representation compared to single-head attention, allowing the model to capture a wider range of patterns and dependencies.
     *   **Robustness:** By averaging or combining information from multiple attention heads, the model becomes more robust and less sensitive to the specifics of individual attention computations.
 
-[Figure 64: Diagram illustrating Multi-Head Attention. Show Queries, Keys, Values being projected into multiple "heads". Show parallel attention computation within each head and then concatenation and linear projection of the outputs from all heads. (Diagram of Multi-Head Attention)]
+![image](https://github.com/user-attachments/assets/c7863c79-878a-4b26-a299-42b243f28926)
+
+*Figure 64: Diagram illustrating Multi-Head Attention.
 
 ##### Positional Encoding: Injecting Sequence Order
 
@@ -1896,7 +2003,9 @@ The **Transformer** architecture, introduced in the seminal paper "Attention is 
     *   **Deterministic:** Positional encodings are not learned; they are pre-calculated and fixed.
     *   **Relative Positional Information:** Sinusoidal encodings allow the model to easily learn to attend by relative positions. For any fixed offset $k$, $PE_{pos+k}$ can be represented as a linear transformation of $PE_{pos}$.
 
-[Figure 65: Diagram illustrating Positional Encoding. (a) Show a formula or explanation of sinusoidal positional encoding. (b) Graphically show how positional encoding vectors vary for different positions in a sequence and across embedding dimensions, demonstrating their encoding of positional information. (Diagram of Positional Encoding)]
+![image](https://github.com/user-attachments/assets/91598f3a-8ccf-4b1b-8e01-8d23e6942bd4)
+
+*Figure 65: Diagram illustrating Positional Encoding.*
 
 ##### Beam Search: Decoding with Attention Models
 
@@ -1926,7 +2035,9 @@ The **Transformer** architecture, introduced in the seminal paper "Attention is 
     *   **Heuristic Search:** Beam search is a heuristic search algorithm and does not guarantee finding the globally optimal sequence (the sequence with the absolute highest probability).
     *   **Computational Cost:** Decoding with beam search is more computationally expensive than greedy decoding, especially for larger beam sizes and longer sequences.
 
-[Figure 66: Diagram illustrating Beam Search Decoding. Show a tree or graph of possible output sequences being explored during beam search. Highlight the beam of top-k hypotheses being maintained and expanded at each decoding step. (Diagram of Beam Search process)]
+![image](https://github.com/user-attachments/assets/ca265839-0fbc-4a8d-831d-26ae1695e982)
+
+*Figure 66: Diagram illustrating Beam Search Decoding.*
 
 #### BERT and XLNet: Pre-trained Transformers for NLP
 
@@ -1953,7 +2064,9 @@ The **Transformer** architecture, introduced in the seminal paper "Attention is 
     *   **Foundation Models:** BERT and XLNet are considered "foundation models" in NLP, serving as a base for many subsequent NLP models and applications. They have become standard components in NLP pipelines and have enabled the development of more powerful and versatile NLP systems.
     *   **Shift to Attention-Based Models:** Their success has solidified the dominance of attention-based architectures, particularly Transformers, in sequence modeling and NLP, shifting away from RNN-based approaches for many tasks.
 
-[Figure 67: Diagram conceptually comparing BERT and XLNet pre-training approaches. (a) BERT: show Masked Language Modeling (masking words and predicting them bidirectionally). (b) XLNet: show Permutation Language Modeling (randomly permuting word order and predicting words based on permuted context). Highlight the bidirectional context learning in both models. (Comparative diagram of BERT and XLNet pre-training)]
+![image](https://github.com/user-attachments/assets/949fc022-7442-4ed4-9cb2-30909fb96f6d)
+
+*Figure 67: Diagram conceptually comparing BERT and XLNet pre-training approaches.
 
 #### Attention in Image Captioning and Beyond
 
@@ -1972,8 +2085,6 @@ While attention mechanisms and Transformers have had a profound impact on natura
 
 The success of attention mechanisms lies in their ability to enable models to dynamically focus on relevant parts of the input, handle variable-length sequences, and learn complex relationships without being limited by sequential processing or fixed-length context vectors.  They have become a fundamental building block in modern deep learning and are likely to continue to play a crucial role in advancing AI across various domains.
 
-Okay, let's develop **Part V. Model Evaluation and Deployment** and **Part VI. Conclusion and Further Learning** of the enhanced studybook.
-im missing 
 ---
 
 ## V. Model Evaluation and Deployment
@@ -2083,7 +2194,9 @@ A **Confusion Matrix** is a powerful tool for visualizing the performance of a c
     *   **Types of Errors:** Off-diagonal entries show the types of errors the model is making. For example, in a binary classification matrix, you can see the counts of False Positives (FP) and False Negatives (FN). In a multi-class matrix, you can see which classes are often confused with each other.
     *   **Class Imbalance:** The confusion matrix can reveal class imbalance in the dataset. If one class has much higher counts than others, it might indicate an imbalanced dataset.
 
-*   [Figure 68: Example of a Confusion Matrix for Binary and Multi-Class Classification. (a) Show a 2x2 confusion matrix for binary classification with TP, TN, FP, FN labeled. (b) Show a larger confusion matrix for multi-class classification (e.g., 3x3 or 4x4) with class labels on rows and columns, and example counts in the cells. (Example confusion matrices)]
+![image](https://github.com/user-attachments/assets/b39d1b14-ab5f-4afc-8621-9c72dea82ec5)
+
+*   *Figure 68: Example of a Confusion Matrix for Multi-Class Classification.*
 
 #### Choosing Appropriate Metrics for Different Tasks
 
