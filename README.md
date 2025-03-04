@@ -4,6 +4,12 @@
 
 ---
 
+## Enhanced Deep Learning Study Book: From Perceptrons to Transformers
+
+**A Comprehensive Guide to Neural Networks and Deep Learning Architectures**
+
+---
+
 ## Table of Contents
 
 **I. Foundations of Neural Networks**
@@ -26,6 +32,7 @@
 3.  **Neuron Activation Functions: Introducing Non-Linearity**
     - [The Importance of Activation Functions](#the-importance-of-activation-functions)
     - [Types of Activation Functions](#types-of-activation-functions)
+        
         - [Binary Threshold Unit (BTU)](#binary-threshold-unit-btu)
         - [Logistic Sigmoid Neuron](#logistic-sigmoid-neuron)
         - [Sigmoid with Temperature](#sigmoid-with-temperature)
@@ -34,10 +41,11 @@
         - [Leaky ReLU](#leaky-relu)
         - [Hyperbolic Tangent (Tanh)](#hyperbolic-tangent-tanh)
         - [Stochastic Binary Neuron](#stochastic-binary-neuron)
+
     - [Visual Comparison of Activation Functions](#visual-comparison-of-activation-functions)
     - [Choosing the Right Activation Function](#choosing-the-right-activation-function)
 
-4.  **Learning in Neural Networks**
+5.  **Learning in Neural Networks**
     - [Types of Machine Learning: Supervised and Unsupervised](#types-of-machine-learning-supervised-and-unsupervised)
     - [The Perceptron Learning Algorithm: Step-by-Step](#perceptron-learning-algorithm-step-by-step)
     - [Information Capacity and Learning Limits](#information-capacity-and-learning-limits)
@@ -133,7 +141,7 @@
     - [Attention Mechanism Principle: Focus and Relevance](#attention-mechanism-principle-focus-and-relevance)
     - [Query, Key, Value Attention Design](#query-key-value-attention-design)
     - [Self-Attention: Capturing Intra-Sequence Relationships](#self-attention-capturing-intra-sequence-relationships)
-    - [Transformer Architecture: Attention is All You Need](#transformer-architecture-attention-is-all-you-need)
+    - [Transformer Architecture: Attention Is All You Need](#transformer-architecture-attention-is-all-you-need)
         - [Multi-Head Attention: Capturing Diverse Relationships](#multi-head-attention-capturing-diverse-relationships)
         - [Positional Encoding: Injecting Sequence Order](#positional-encoding-injecting-sequence-order)
         - [Encoder and Decoder Layers in Transformers](#encoder-and-decoder-layers-in-transformers)
@@ -165,7 +173,6 @@
 
 **VII. Glossary of Key Terms**
 19. [Comprehensive Glossary](#comprehensive-glossary)
-
 ---
 
 ## I. Foundations of Neural Networks
