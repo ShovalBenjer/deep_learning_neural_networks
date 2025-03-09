@@ -2353,7 +2353,7 @@ To further your learning and exploration of deep learning, here are some recomme
 
 #### Online Courses and Educational Platforms
 
-*   **Stanford CS231n: Convolutional Neural Networks for Visual Recognition:** [http://cs231n.stanford.edu/](http://cs231n.stanford.edu/): A highly regarded course on CNNs, covering fundamental concepts and applications in computer vision. Course materials (lecture notes, assignments) are available online.
+*   **Stanford CS231n: Convolutional Neural Networks for Visual Recognition:** [Link Here](https://cs231n.github.io/): A highly regarded course on CNNs, covering fundamental concepts and applications in computer vision. Course materials (lecture notes, assignments) are available online. 
 *   **Stanford CS224n: Natural Language Processing with Deep Learning:** [http://web.stanford.edu/class/cs224n/](http://web.stanford.edu/class/cs224n/): A leading course on deep learning for NLP, covering RNNs, LSTMs, Transformers, and advanced NLP topics. Course materials are available online.
 *   **fast.ai Deep Learning Courses:** [https://www.fast.ai/](https://www.fast.ai/): Offers practical, code-first deep learning courses that are highly accessible and focus on applied deep learning with PyTorch.
 *   **Coursera, edX, Udacity, DeepLearning.AI:** Platforms offering a wide variety of deep learning courses, specializations, and professional certificates, covering topics from introductory deep learning to advanced specializations.
