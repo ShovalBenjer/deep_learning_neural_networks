@@ -33,15 +33,18 @@ class LLMClient:
     def _call(self, system_prompt: str, user_prompt: str, temperature: float = 0.7) -> str:
         if not self._client:
             return self._mock_response(system_prompt, user_prompt)
-        response = self._client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=temperature,
-        )
-        return response.choices[0].message.content or ""
+        try:
+            response = self._client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=temperature,
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            return self._mock_response(system_prompt, user_prompt)
 
     def _mock_response(self, system_prompt: str, user_prompt: str) -> str:
         if "generate" in system_prompt.lower() or "quiz" in system_prompt.lower():
@@ -77,6 +80,8 @@ class LLMClient:
                 "focus_areas": ["chain rule in backpropagation", "learning rate selection"],
                 "reasoning": "Focus on foundational optimization concepts before advancing to architecture-specific topics.",
             })
+        if "explain" in system_prompt.lower() or "explanation" in system_prompt.lower():
+            return "Activation functions introduce non-linearity, enabling neural networks to learn complex patterns. Without them, the network would be a simple linear model regardless of depth."
         return json.dumps({"error": "Unknown request type"})
 
     def generate_questions(

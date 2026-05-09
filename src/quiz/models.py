@@ -58,13 +58,17 @@ class QuizQuestion:
     def from_dict(cls, data: dict[str, Any]) -> QuizQuestion:
         options = [
             QuizOption(
-                label=o["label"], text=o["text"], is_correct=o.get("is_correct", False)
+                label=o.get("label", ""), text=o.get("text", ""), is_correct=o.get("is_correct", False)
             )
             for o in data.get("options", [])
         ]
+        try:
+            quiz_type = QuizType(data.get("quiz_type", "multiple_choice"))
+        except ValueError:
+            quiz_type = QuizType.MULTIPLE_CHOICE
         return cls(
             id=data.get("id", uuid.uuid4().hex[:12]),
-            quiz_type=QuizType(data.get("quiz_type", "multiple_choice")),
+            quiz_type=quiz_type,
             topic=data.get("topic", ""),
             section=data.get("section", ""),
             question_text=data.get("question_text", ""),

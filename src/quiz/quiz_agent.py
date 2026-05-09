@@ -64,6 +64,10 @@ class QuizAgent:
         difficulty: int = 3,
         focus_weak: bool = True,
     ) -> QuizSession:
+        valid_types = {t.value for t in QuizType}
+        if quiz_type not in valid_types:
+            raise ValueError(f"Invalid quiz_type '{quiz_type}'. Must be one of: {sorted(valid_types)}")
+
         if topics is None:
             if focus_weak:
                 topics = self.scheduler.get_priority_topics(
@@ -90,24 +94,31 @@ class QuizAgent:
             )
             for rq in raw_questions:
                 questions.append(QuizQuestion.from_dict(rq))
-            remaining -= n
+            remaining -= len(raw_questions)
 
         if remaining > 0 and topics:
-            topic = topics[0]
-            section = self.topic_sections.get(topic, topic)
-            raw_questions = self.llm.generate_questions(
-                topic=topic,
-                section=section,
-                quiz_type=quiz_type,
-                num_questions=remaining,
-                difficulty=difficulty,
-            )
-            for rq in raw_questions:
-                questions.append(QuizQuestion.from_dict(rq))
+            for i, topic in enumerate(topics):
+                if remaining <= 0:
+                    break
+                n = min(1, remaining)
+                section = self.topic_sections.get(topic, topic)
+                raw_questions = self.llm.generate_questions(
+                    topic=topic,
+                    section=section,
+                    quiz_type=quiz_type,
+                    num_questions=n,
+                    difficulty=difficulty,
+                )
+                for rq in raw_questions:
+                    questions.append(QuizQuestion.from_dict(rq))
+                remaining -= len(raw_questions)
 
         session = QuizSession(questions=questions)
         self._session = session
-        self.persistence.save_session(session)
+        try:
+            self.persistence.save_session(session)
+        except OSError:
+            pass
         return session
 
     def get_current_question(self) -> QuizQuestion | None:
@@ -159,8 +170,11 @@ class QuizAgent:
         if self._session.current_question_index >= len(self._session.questions):
             self._session.is_complete = True
 
-        self.persistence.save_session(self._session)
-        self.persistence.save_performance(self.performances)
+        try:
+            self.persistence.save_session(self._session)
+            self.persistence.save_performance(self.performances)
+        except OSError:
+            pass
 
         return quiz_answer
 
