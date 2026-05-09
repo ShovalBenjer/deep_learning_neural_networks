@@ -1,383 +1,248 @@
-import uuid
-import logging
-from datetime import datetime
-from typing import Dict, List, Optional, Any
+from __future__ import annotations
 
-from src.quiz.question_bank import QuestionBank, Question, QuestionType
-from src.quiz.spaced_repetition import SpacedRepetitionTracker, TopicRecord
-from src.quiz.persistence import SessionPersistence
-from src.quiz.llm_interface import LLMInterface
+from typing import Any
 
-logger = logging.getLogger(__name__)
-
-
-class QuizResult:
-    def __init__(
-        self,
-        question_id: str,
-        question_type: QuestionType,
-        section: str,
-        topic: str,
-        user_answer: str,
-        correct: bool,
-        score: float,
-        explanation: str,
-        improvement_suggestion: str = "",
-    ):
-        self.question_id = question_id
-        self.question_type = question_type
-        self.section = section
-        self.topic = topic
-        self.user_answer = user_answer
-        self.correct = correct
-        self.score = score
-        self.explanation = explanation
-        self.improvement_suggestion = improvement_suggestion
-        self.timestamp = datetime.utcnow().isoformat()
-
-    def to_dict(self) -> Dict:
-        return {
-            "question_id": self.question_id,
-            "question_type": self.question_type.value,
-            "section": self.section,
-            "topic": self.topic,
-            "user_answer": self.user_answer,
-            "correct": self.correct,
-            "score": self.score,
-            "explanation": self.explanation,
-            "improvement_suggestion": self.improvement_suggestion,
-            "timestamp": self.timestamp,
-        }
+from src.quiz.llm_client import LLMClient
+from src.quiz.models import (
+    QuizAnswer,
+    QuizQuestion,
+    QuizSession,
+    QuizType,
+    StudyPathSuggestion,
+    TopicPerformance,
+)
+from src.quiz.persistence import PersistenceManager
+from src.quiz.spaced_repetition import SpacedRepetitionScheduler
 
 
-class QuizSession:
-    def __init__(self, session_id: Optional[str] = None):
-        self.session_id = session_id or str(uuid.uuid4())
-        self.results: List[QuizResult] = []
-        self.created_at = datetime.utcnow().isoformat()
-        self.last_activity = self.created_at
-
-    def add_result(self, result: QuizResult):
-        self.results.append(result)
-        self.last_activity = datetime.utcnow().isoformat()
-
-    def get_stats(self) -> Dict:
-        if not self.results:
-            return {"total": 0, "correct": 0, "accuracy": 0.0}
-        total = len(self.results)
-        correct = sum(1 for r in self.results if r.correct)
-        avg_score = sum(r.score for r in self.results) / total
-        return {
-            "total": total,
-            "correct": correct,
-            "accuracy": correct / total,
-            "average_score": avg_score,
-            "by_section": self._section_breakdown(),
-        }
-
-    def _section_breakdown(self) -> Dict[str, Dict]:
-        sections: Dict[str, Dict[str, List]] = {}
-        for r in self.results:
-            if r.section not in sections:
-                sections[r.section] = {"correct": [], "scores": []}
-            sections[r.section]["correct"].append(r.correct)
-            sections[r.section]["scores"].append(r.score)
-        return {
-            s: {
-                "accuracy": sum(d["correct"]) / len(d["correct"]),
-                "avg_score": sum(d["scores"]) / len(d["scores"]),
-                "total": len(d["correct"]),
-            }
-            for s, d in sections.items()
-        }
-
-    def to_dict(self) -> Dict:
-        return {
-            "session_id": self.session_id,
-            "created_at": self.created_at,
-            "last_activity": self.last_activity,
-            "results": [r.to_dict() for r in self.results],
-            "stats": self.get_stats(),
-        }
+TOPICS: list[dict[str, str]] = [
+    {"topic": "neural_networks", "section": "Introduction to Artificial Neural Networks"},
+    {"topic": "perceptron", "section": "The Perceptron: A Basic Neural Unit"},
+    {"topic": "activation_functions", "section": "Neuron Activation Functions: Introducing Non-Linearity"},
+    {"topic": "learning", "section": "Learning in Neural Networks"},
+    {"topic": "gradient_descent", "section": "Gradient Descent: Optimizing Network Weights"},
+    {"topic": "backpropagation", "section": "Error Backpropagation: Computing Gradients in Deep Networks"},
+    {"topic": "cost_functions", "section": "Cost Functions: Measuring Network Performance"},
+    {"topic": "overfitting", "section": "Overfitting and Regularization: Enhancing Generalization"},
+    {"topic": "vanishing_gradients", "section": "Vanishing and Exploding Gradients: Deep Network Challenges"},
+    {"topic": "local_minima", "section": "Addressing Local Minima and Optimization Challenges"},
+    {"topic": "deep_architectures", "section": "Deep Architectures and Layer-wise Training"},
+    {"topic": "cnns", "section": "Convolutional Neural Networks (CNNs): Image and Spatial Data"},
+    {"topic": "rnns", "section": "Recurrent Neural Networks (RNNs): Sequence Data and Time Series"},
+    {"topic": "lstms", "section": "Long Short-Term Memory Networks (LSTMs) and GRUs"},
+    {"topic": "attention", "section": "Attention Mechanisms and Transformers"},
+    {"topic": "evaluation", "section": "Model Evaluation and Performance Metrics"},
+]
 
 
 class QuizAgent:
     def __init__(
         self,
-        llm_interface: Optional[LLMInterface] = None,
-        storage_dir: str = ".quiz_sessions",
+        api_key: str | None = None,
+        base_url: str | None = None,
+        data_dir: str | None = None,
     ):
-        self.question_bank = QuestionBank()
-        self.tracker = SpacedRepetitionTracker()
-        self.persistence = SessionPersistence(storage_dir)
-        self.llm = llm_interface or LLMInterface()
-        self.session: Optional[QuizSession] = None
+        self.llm = LLMClient(api_key=api_key, base_url=base_url)
+        self.scheduler = SpacedRepetitionScheduler()
+        self.persistence = PersistenceManager(data_dir=data_dir)
+        self.performances: dict[str, TopicPerformance] = self.persistence.load_performance()
+        self._session: QuizSession | None = None
 
-        for section_key, section_data in self.question_bank.get_all_sections().items():
-            for topic in section_data.get("topics", []):
-                self.tracker.add_topic(topic, section_key)
+    @property
+    def all_topics(self) -> list[str]:
+        return [t["topic"] for t in TOPICS]
 
-    def start_session(self, session_id: Optional[str] = None) -> QuizSession:
-        self.session = QuizSession(session_id)
-        logger.info("Started quiz session: %s", self.session.session_id)
-        return self.session
+    @property
+    def topic_sections(self) -> dict[str, str]:
+        return {t["topic"]: t["section"] for t in TOPICS}
 
-    def end_session(self) -> Optional[Dict]:
-        if self.session is None:
-            return None
-        stats = self.session.get_stats()
-        self.save_session()
-        self.session = None
-        return stats
-
-    def get_next_question(
+    def start_quiz(
         self,
-        section: Optional[str] = None,
-        question_type: Optional[QuestionType] = None,
-        difficulty: Optional[str] = None,
+        topics: list[str] | None = None,
+        quiz_type: str = "multiple_choice",
+        num_questions: int = 5,
+        difficulty: int = 3,
         focus_weak: bool = True,
-        use_llm: bool = False,
-    ) -> Optional[Question]:
-        if focus_weak and not question_type and not section:
-            due_topics = self.tracker.get_due_topics()
-            if due_topics:
-                topic_record = due_topics[0]
-                section = topic_record.section
-                topic = topic_record.topic
-                question = self.question_bank.get_random_question(
-                    section=section, topic=topic, difficulty=difficulty
-                )
-                if question:
-                    return question
-
-        if use_llm and self.llm.api_key:
-            return self._generate_llm_question(section, question_type, difficulty)
-
-        question = self.question_bank.get_random_question(
-            section=section, qtype=question_type, difficulty=difficulty
-        )
-        return question
-
-    def submit_answer(
-        self,
-        question_id: str,
-        user_answer: str,
-        use_llm_evaluation: bool = False,
-    ) -> QuizResult:
-        question = self.question_bank.get_question(question_id)
-        if question is None:
-            raise ValueError(f"Question {question_id} not found")
-
-        if question.type == QuestionType.MULTIPLE_CHOICE:
-            correct = user_answer.upper() == question.correct_answer.upper()
-            score = 1.0 if correct else 0.0
-            explanation = question.explanation or ""
-            improvement = "" if correct else f"The correct answer is {question.correct_answer}."
-
-        elif question.type == QuestionType.CODE_COMPLETION:
-            if use_llm_evaluation and self.llm.api_key:
-                result = self._evaluate_with_llm(question, user_answer)
-                correct = result.get("is_correct", False)
-                score = float(result.get("score", 0.0 if not correct else 1.0))
-                explanation = result.get("explanation", question.explanation or "")
-                improvement = result.get("improvement_suggestion", "")
+    ) -> QuizSession:
+        if topics is None:
+            if focus_weak:
+                topics = self.scheduler.get_priority_topics(
+                    self.performances, self.all_topics
+                )[:5]
             else:
-                correct = user_answer.strip().lower() == question.correct_answer.strip().lower()
-                score = 1.0 if correct else 0.0
-                explanation = question.explanation or ""
-                improvement = "" if correct else f"Expected: {question.correct_answer}"
+                topics = self.all_topics[:5]
 
-        elif question.type == QuestionType.CONCEPT_EXPLANATION:
-            if use_llm_evaluation and self.llm.api_key:
-                result = self._evaluate_with_llm(question, user_answer)
-                correct = result.get("is_correct", False)
-                score = float(result.get("score", 0.0))
-                explanation = result.get("explanation", "")
-                improvement = result.get("improvement_suggestion", "")
-            else:
-                key_concepts = question.key_concepts or []
-                mentioned = sum(1 for concept in key_concepts if concept.lower() in user_answer.lower())
-                score = mentioned / max(len(key_concepts), 1)
-                correct = score >= 0.5
-                explanation = f"You covered {mentioned}/{len(key_concepts)} key concepts: {', '.join(key_concepts)}"
-                improvement = "" if correct else f"Try to address: {', '.join(key_concepts)}"
-        else:
-            correct = False
-            score = 0.0
-            explanation = "Unknown question type"
-            improvement = ""
+        questions: list[QuizQuestion] = []
+        per_topic = max(1, num_questions // len(topics))
+        remaining = num_questions
 
-        quiz_result = QuizResult(
-            question_id=question_id,
-            question_type=question.type,
-            section=question.section,
-            topic=question.topic,
-            user_answer=user_answer,
-            correct=correct,
-            score=score,
-            explanation=explanation,
-            improvement_suggestion=improvement,
-        )
-
-        if self.session:
-            self.session.add_result(quiz_result)
-
-        self.tracker.record_result(question.topic, question.section, correct)
-
-        return quiz_result
-
-    def get_study_recommendations(self) -> Dict[str, Any]:
-        weak_topics = self.tracker.get_weak_topics()
-        strong_topics = self.tracker.get_strong_topics()
-        weak_names = [f"{r.section}/{r.topic}" for r in weak_topics]
-        strong_names = [f"{r.section}/{r.topic}" for r in strong_topics]
-
-        recommendations = {
-            "weak_topics": weak_names,
-            "strong_topics": strong_names,
-            "due_topics": [f"{r.section}/{r.topic}" for r in self.tracker.get_due_topics()],
-            "overall_stats": self.tracker.get_overall_stats(),
-        }
-
-        if self.llm.api_key and weak_names:
-            try:
-                study_path = self.llm.suggest_study_path(weak_names, strong_names)
-                recommendations["study_path"] = study_path
-            except Exception as e:
-                logger.warning("Failed to generate LLM study path: %s", e)
-                recommendations["study_path"] = self._generate_default_study_path(weak_topics, strong_topics)
-
-        if "study_path" not in recommendations:
-            recommendations["study_path"] = self._generate_default_study_path(weak_topics, strong_topics)
-
-        return recommendations
-
-    def get_explanation(self, topic: str, section: str, concept: Optional[str] = None) -> Dict:
-        concept = concept or topic
-        if self.llm.api_key:
-            try:
-                result = self.llm.generate_explanation(section, concept)
-                if "parse_error" not in result:
-                    return result
-            except Exception as e:
-                logger.warning("LLM explanation failed: %s", e)
-
-        section_data = self.question_bank.get_all_sections().get(section, {})
-        return {
-            "explanation": f"Topic: {topic} in {section_data.get('title', section)}",
-            "key_points": ["Review the course material for this topic"],
-            "related_topics": self.question_bank.get_section_topics(section)[:5],
-        }
-
-    def save_session(self):
-        if self.session is None:
-            return
-        data = {
-            "session": self.session.to_dict(),
-            "tracker": self.tracker.to_dict(),
-        }
-        self.persistence.save_session(self.session.session_id, data)
-        logger.info("Saved quiz session: %s", self.session.session_id)
-
-    def load_session(self, session_id: str) -> Optional[QuizSession]:
-        data = self.persistence.load_session(session_id)
-        if data is None:
-            return None
-
-        session_data = data.get("session", {})
-        tracker_data = data.get("tracker", {})
-
-        self.session = QuizSession(session_id=session_data.get("session_id", session_id))
-        self.session.created_at = session_data.get("created_at", self.session.created_at)
-        self.session.last_activity = session_data.get("last_activity", self.session.last_activity)
-
-        for result_data in session_data.get("results", []):
-            result = QuizResult(
-                question_id=result_data["question_id"],
-                question_type=QuestionType(result_data["question_type"]),
-                section=result_data["section"],
-                topic=result_data["topic"],
-                user_answer=result_data["user_answer"],
-                correct=result_data["correct"],
-                score=result_data["score"],
-                explanation=result_data.get("explanation", ""),
-                improvement_suggestion=result_data.get("improvement_suggestion", ""),
-            )
-            result.timestamp = result_data.get("timestamp", result.timestamp)
-            self.session.results.append(result)
-
-        if tracker_data:
-            self.tracker = SpacedRepetitionTracker.from_dict(tracker_data)
-
-        return self.session
-
-    def _generate_llm_question(
-        self,
-        section: Optional[str],
-        question_type: Optional[QuestionType],
-        difficulty: Optional[str],
-    ) -> Optional[Question]:
-        topic = "deep learning"
-        section_data = self.question_bank.get_all_sections().get(section, {})
-        if section_data:
-            import random
-            topic = random.choice(section_data.get("topics", [topic]))
-
-        qtype_str = question_type.value if question_type else "multiple_choice"
-        difficulty = difficulty or "medium"
-
-        try:
-            result = self.llm.generate_quiz_question(topic, qtype_str, difficulty)
-            if "parse_error" in result:
-                return None
-
-            question_id = f"llm-{uuid.uuid4().hex[:8]}"
-            q_type = QuestionType(result.get("type", qtype_str))
-
-            return Question(
-                id=question_id,
-                type=q_type,
-                section=section or "foundations",
+        for topic in topics:
+            n = min(per_topic, remaining)
+            if n <= 0:
+                break
+            section = self.topic_sections.get(topic, topic)
+            raw_questions = self.llm.generate_questions(
                 topic=topic,
+                section=section,
+                quiz_type=quiz_type,
+                num_questions=n,
                 difficulty=difficulty,
-                question_text=result.get("question", ""),
-                options=result.get("options"),
-                correct_answer=result.get("correct_answer"),
-                explanation=result.get("explanation", ""),
-                code_template=result.get("code_template"),
-                blank_description=result.get("blank_description"),
-                key_concepts=result.get("key_concepts"),
-                grading_rubric=result.get("grading_rubric"),
-                sample_answer=result.get("sample_answer"),
             )
-        except Exception as e:
-            logger.error("LLM question generation failed: %s", e)
+            for rq in raw_questions:
+                questions.append(QuizQuestion.from_dict(rq))
+            remaining -= n
+
+        if remaining > 0 and topics:
+            topic = topics[0]
+            section = self.topic_sections.get(topic, topic)
+            raw_questions = self.llm.generate_questions(
+                topic=topic,
+                section=section,
+                quiz_type=quiz_type,
+                num_questions=remaining,
+                difficulty=difficulty,
+            )
+            for rq in raw_questions:
+                questions.append(QuizQuestion.from_dict(rq))
+
+        session = QuizSession(questions=questions)
+        self._session = session
+        self.persistence.save_session(session)
+        return session
+
+    def get_current_question(self) -> QuizQuestion | None:
+        if self._session is None:
             return None
+        if self._session.current_question_index >= len(self._session.questions):
+            return None
+        return self._session.questions[self._session.current_question_index]
 
-    def _evaluate_with_llm(self, question: Question, user_answer: str) -> Dict:
-        correct_answer = question.correct_answer or question.sample_answer
-        try:
-            result = self.llm.evaluate_answer(
-                question=question.question_text,
-                user_answer=user_answer,
-                correct_answer=correct_answer,
-            )
-            return result
-        except Exception as e:
-            logger.error("LLM evaluation failed: %s", e)
-            return {"is_correct": False, "score": 0.0, "explanation": str(e), "improvement_suggestion": ""}
+    def answer_question(self, answer: str) -> QuizAnswer:
+        if self._session is None:
+            raise ValueError("No active quiz session. Call start_quiz() first.")
 
-    def _generate_default_study_path(
-        self, weak_topics: List[TopicRecord], strong_topics: List[TopicRecord]
-    ) -> Dict:
-        path = []
-        for record in weak_topics[:5]:
-            path.append({
-                "topic": record.topic,
-                "reason": f"Accuracy: {record.correct_count}/{record.total_attempts} ({record.correct_count / max(record.total_attempts, 1) * 100:.0f}%)",
-            })
+        question = self.get_current_question()
+        if question is None:
+            raise ValueError("No more questions in this session.")
+
+        evaluation = self.llm.evaluate_answer(
+            question_text=question.question_text,
+            correct_answer=question.correct_answer,
+            user_answer=answer,
+            quiz_type=question.quiz_type.value,
+        )
+
+        quiz_answer = QuizAnswer(
+            question_id=question.id,
+            user_answer=answer,
+            is_correct=evaluation.get("is_correct", False),
+            feedback=evaluation.get("feedback", ""),
+            score=evaluation.get("score", 0.0),
+        )
+
+        self._session.answers.append(quiz_answer)
+        self._session.current_question_index += 1
+
+        topic = question.topic
+        if topic not in self._session.topic_performances:
+            self._session.topic_performances[topic] = TopicPerformance(topic=topic)
+
+        perf = self._session.topic_performances[topic]
+        quality = SpacedRepetitionScheduler.quality_from_score(quiz_answer.score)
+        self.scheduler.update_performance(perf, quality)
+
+        if topic not in self.performances:
+            self.performances[topic] = TopicPerformance(topic=topic)
+        global_perf = self.performances[topic]
+        self.scheduler.update_performance(global_perf, quality)
+
+        if self._session.current_question_index >= len(self._session.questions):
+            self._session.is_complete = True
+
+        self.persistence.save_session(self._session)
+        self.persistence.save_performance(self.performances)
+
+        return quiz_answer
+
+    def get_session_summary(self) -> dict[str, Any]:
+        if self._session is None:
+            return {}
+        session = self._session
         return {
-            "study_path": path,
-            "priority_order": [r.topic for r in weak_topics],
-            "estimated_study_time": f"{len(weak_topics) * 15} minutes",
+            "session_id": session.id,
+            "total_questions": len(session.questions),
+            "answered": len(session.answers),
+            "score": session.score,
+            "is_complete": session.is_complete,
+            "topic_scores": {
+                topic: {
+                    "accuracy": perf.accuracy,
+                    "total": perf.total_questions,
+                    "correct": perf.correct_count,
+                }
+                for topic, perf in session.topic_performances.items()
+            },
         }
+
+    def get_study_path(self) -> StudyPathSuggestion:
+        result = self.llm.suggest_study_path(self.performances, self.all_topics)
+        return StudyPathSuggestion(
+            weak_topics=result.get("weak_topics", []),
+            suggested_sections=result.get("suggested_sections", []),
+            focus_areas=result.get("focus_areas", []),
+            reasoning=result.get("reasoning", ""),
+        )
+
+    def get_explanation(self, question_id: str | None = None) -> str:
+        if self._session is None:
+            return "No active session."
+        question = None
+        if question_id:
+            for q in self._session.questions:
+                if q.id == question_id:
+                    question = q
+                    break
+        if question is None:
+            question = self.get_current_question()
+        if question is None:
+            return "No question found."
+        return self.llm.generate_explanation(
+            topic=question.topic,
+            question_text=question.question_text,
+            correct_answer=question.correct_answer,
+        )
+
+    def load_session(self, session_id: str) -> QuizSession | None:
+        session = self.persistence.load_session(session_id)
+        if session:
+            self._session = session
+        return session
+
+    def list_sessions(self) -> list[dict]:
+        return self.persistence.list_sessions()
+
+    def get_overall_stats(self) -> dict[str, Any]:
+        if not self.performances:
+            return {
+                "topics_studied": 0,
+                "total_questions": 0,
+                "overall_accuracy": 0.0,
+                "weakest_topics": [],
+                "due_reviews": self.all_topics,
+            }
+        total_q = sum(p.total_questions for p in self.performances.values())
+        total_correct = sum(p.correct_count for p in self.performances.values())
+        due = self.scheduler.get_due_topics(self.performances)
+        weak = self.scheduler.get_weak_topics(self.performances)
+        return {
+            "topics_studied": len(self.performances),
+            "total_questions": total_q,
+            "overall_accuracy": total_correct / total_q if total_q > 0 else 0.0,
+            "weakest_topics": weak[:5],
+            "due_reviews": due,
+        }
+
+    def resume_or_start(self, quiz_type: str = "multiple_choice", num_questions: int = 5) -> QuizSession:
+        if self._session and not self._session.is_complete:
+            return self._session
+        return self.start_quiz(quiz_type=quiz_type, num_questions=num_questions)

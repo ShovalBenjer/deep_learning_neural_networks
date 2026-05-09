@@ -1,56 +1,72 @@
+from __future__ import annotations
+
 import json
 import os
-from datetime import datetime
-from typing import Dict, Optional
+from pathlib import Path
+
+from src.quiz.models import QuizSession, TopicPerformance
 
 
-class SessionPersistence:
-    def __init__(self, storage_dir: str = ".quiz_sessions"):
-        self.storage_dir = storage_dir
-        os.makedirs(self.storage_dir, exist_ok=True)
+DEFAULT_DATA_DIR = Path.home() / ".quiz_agent"
 
-    def save_session(self, session_id: str, data: Dict):
-        filepath = self._session_path(session_id)
-        save_data = {
-            "session_id": session_id,
-            "saved_at": datetime.utcnow().isoformat(),
-            "data": data,
-        }
+
+class PersistenceManager:
+    def __init__(self, data_dir: str | Path | None = None):
+        self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
+        self.sessions_dir = self.data_dir / "sessions"
+        self.performance_file = self.data_dir / "performance.json"
+        self._ensure_dirs()
+
+    def _ensure_dirs(self) -> None:
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.sessions_dir.mkdir(parents=True, exist_ok=True)
+
+    def save_session(self, session: QuizSession) -> Path:
+        filepath = self.sessions_dir / f"{session.id}.json"
         with open(filepath, "w") as f:
-            json.dump(save_data, f, indent=2, default=str)
+            json.dump(session.to_dict(), f, indent=2)
+        return filepath
 
-    def load_session(self, session_id: str) -> Optional[Dict]:
-        filepath = self._session_path(session_id)
-        if not os.path.exists(filepath):
+    def load_session(self, session_id: str) -> QuizSession | None:
+        filepath = self.sessions_dir / f"{session_id}.json"
+        if not filepath.exists():
             return None
-        with open(filepath, "r") as f:
-            wrapper = json.load(f)
-        return wrapper.get("data")
+        with open(filepath) as f:
+            data = json.load(f)
+        return QuizSession.from_dict(data)
+
+    def list_sessions(self) -> list[dict]:
+        sessions = []
+        for filepath in self.sessions_dir.glob("*.json"):
+            try:
+                with open(filepath) as f:
+                    data = json.load(f)
+                sessions.append({
+                    "id": data.get("id", ""),
+                    "created_at": data.get("created_at", ""),
+                    "is_complete": data.get("is_complete", False),
+                    "num_questions": len(data.get("questions", [])),
+                    "num_answers": len(data.get("answers", [])),
+                })
+            except (json.JSONDecodeError, OSError):
+                continue
+        return sorted(sessions, key=lambda s: s.get("created_at", ""), reverse=True)
+
+    def save_performance(self, performances: dict[str, TopicPerformance]) -> None:
+        data = {k: v.to_dict() for k, v in performances.items()}
+        with open(self.performance_file, "w") as f:
+            json.dump(data, f, indent=2)
+
+    def load_performance(self) -> dict[str, TopicPerformance]:
+        if not self.performance_file.exists():
+            return {}
+        with open(self.performance_file) as f:
+            data = json.load(f)
+        return {k: TopicPerformance.from_dict(v) for k, v in data.items()}
 
     def delete_session(self, session_id: str) -> bool:
-        filepath = self._session_path(session_id)
-        if os.path.exists(filepath):
+        filepath = self.sessions_dir / f"{session_id}.json"
+        if filepath.exists():
             os.remove(filepath)
             return True
         return False
-
-    def list_sessions(self):
-        sessions = []
-        for fname in os.listdir(self.storage_dir):
-            if fname.endswith(".json"):
-                filepath = os.path.join(self.storage_dir, fname)
-                try:
-                    with open(filepath, "r") as f:
-                        wrapper = json.load(f)
-                    sessions.append({
-                        "session_id": wrapper.get("session_id"),
-                        "saved_at": wrapper.get("saved_at"),
-                    })
-                except (json.JSONDecodeError, KeyError):
-                    continue
-        sessions.sort(key=lambda s: s.get("saved_at", ""), reverse=True)
-        return sessions
-
-    def _session_path(self, session_id: str) -> str:
-        safe_id = "".join(c for c in session_id if c.isalnum() or c in "-_")
-        return os.path.join(self.storage_dir, f"{safe_id}.json")
