@@ -4,7 +4,6 @@ Implements SM-2 variant algorithm for optimal retention scheduling
 """
 
 import json
-import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field, asdict
@@ -232,11 +231,16 @@ class QuizAgent:
                     self.user_progress[qid] = UserProgress(**prog)
         except FileNotFoundError:
             pass
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
     
     def _save_progress(self):
         data = {qid: asdict(prog) for qid, prog in self.user_progress.items()}
-        with open(f"progress_{self.user_id}.json", "w") as f:
-            json.dump(data, f, indent=2)
+        try:
+            with open(f"progress_{self.user_id}.json", "w") as f:
+                json.dump(data, f, indent=2)
+        except (OSError, IOError):
+            pass
     
     def get_due_questions(self, limit: int = 10) -> List[Question]:
         now = datetime.now()
@@ -254,11 +258,14 @@ class QuizAgent:
         progress = self.user_progress.get(qid)
         if progress is None:
             return 100
-        days_overdue = (datetime.now() - datetime.fromisoformat(progress.next_review)).days
+        delta = datetime.now() - datetime.fromisoformat(progress.next_review)
+        days_overdue = max(delta.total_seconds() / 86400, 0)
         return days_overdue + (5 - progress.ease_factor)
     
     def submit_answer(self, question_id: str, selected_answer: int, 
                       response_time_ms: Optional[int] = None) -> Dict:
+        if question_id not in self.questions:
+            raise ValueError(f"Invalid question_id: '{question_id}' does not exist")
         question = self.questions[question_id]
         is_correct = selected_answer == question.correct_answer
         
@@ -336,7 +343,8 @@ class QuizAgent:
             for qid in self.user_progress.keys():
                 if qid in self.questions:
                     q = self.questions[qid]
-                    f.write(f"{q.question}\t{' '.join(q.choices)}\t{q.correct_answer}\n")
+                    escaped_choices = " | ".join(c.replace("\t", " ") for c in q.choices)
+                    f.write(f"{q.question}\t{escaped_choices}\t{q.correct_answer}\n")
         
         return filename
 

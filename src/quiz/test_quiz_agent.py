@@ -45,8 +45,6 @@ class TestSM2Scheduler(unittest.TestCase):
 
 class TestQuizAgent(unittest.TestCase):
     def setUp(self):
-        self.test_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-        self.test_file.close()
         self.agent = QuizAgent("test_user")
         self.agent._save_progress()
     
@@ -64,12 +62,17 @@ class TestQuizAgent(unittest.TestCase):
     
     def test_submit_correct_answer(self):
         qid = list(self.agent.questions.keys())[0]
-        result = self.agent.submit_answer(qid, 0)
+        question = self.agent.questions[qid]
+        result = self.agent.submit_answer(qid, question.correct_answer)
         
-        self.assertTrue(result["correct"] or True)
+        self.assertTrue(result["correct"])
         self.assertIn("explanation", result)
         self.assertIn("next_review", result)
     
+    def test_submit_invalid_question_id(self):
+        with self.assertRaises(ValueError):
+            self.agent.submit_answer("nonexistent_id", 0)
+
     def test_spaced_repetition_interval(self):
         qid = list(self.agent.questions.keys())[0]
         
