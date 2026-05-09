@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from typing import Any
 
 try:
@@ -44,6 +45,10 @@ class LLMClient:
             )
             return response.choices[0].message.content or ""
         except Exception as e:
+            if HAS_OPENAI and isinstance(e, openai.APIError):
+                print(f"Warning: LLM API error, falling back to mock: {e}", file=sys.stderr)
+            else:
+                print(f"Warning: Unexpected error calling LLM, falling back to mock: {e}", file=sys.stderr)
             return self._mock_response(system_prompt, user_prompt)
 
     def _mock_response(self, system_prompt: str, user_prompt: str) -> str:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 from src.quiz.llm_client import LLMClient
@@ -77,6 +78,8 @@ class QuizAgent:
                 topics = self.all_topics[:5]
 
         questions: list[QuizQuestion] = []
+        if not topics:
+            topics = self.all_topics[:5]
         per_topic = max(1, num_questions // len(topics))
         remaining = num_questions
 
@@ -97,9 +100,10 @@ class QuizAgent:
             remaining -= len(raw_questions)
 
         if remaining > 0 and topics:
-            for i, topic in enumerate(topics):
-                if remaining <= 0:
-                    break
+            max_attempts = len(topics) * 2
+            attempt = 0
+            while remaining > 0 and attempt < max_attempts:
+                topic = topics[attempt % len(topics)]
                 n = min(1, remaining)
                 section = self.topic_sections.get(topic, topic)
                 raw_questions = self.llm.generate_questions(
@@ -112,13 +116,14 @@ class QuizAgent:
                 for rq in raw_questions:
                     questions.append(QuizQuestion.from_dict(rq))
                 remaining -= len(raw_questions)
+                attempt += 1
 
         session = QuizSession(questions=questions)
         self._session = session
         try:
             self.persistence.save_session(session)
-        except OSError:
-            pass
+        except OSError as e:
+            print(f"Warning: Could not save session: {e}", file=sys.stderr)
         return session
 
     def get_current_question(self) -> QuizQuestion | None:
@@ -173,8 +178,8 @@ class QuizAgent:
         try:
             self.persistence.save_session(self._session)
             self.persistence.save_performance(self.performances)
-        except OSError:
-            pass
+        except OSError as e:
+            print(f"Warning: Could not save progress: {e}", file=sys.stderr)
 
         return quiz_answer
 
