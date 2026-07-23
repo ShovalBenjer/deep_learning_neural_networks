@@ -1,0 +1,45 @@
+name: Claude Code Review
+
+# Always-fresh review: `synchronize` fires on EVERY push to the PR branch, and the
+# concurrency group cancels any in-flight review so each push starts a fresh one
+# (workflow equivalent of "@claude review always" on a Manual-mode repo).
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Skip drafts; reviews restart when marked ready
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          prompt: |
+            Perform a fresh, full review of this PR (do not assume prior reviews).
+            Focus, in order: (1) correctness bugs that break behavior, (2) security
+            (anchor findings to OWASP/CWE where applicable), (3) contract/boundary
+            violations (typed DTOs, unchecked errors at IO edges), (4) performance,
+            (5) maintainability. Rules:
+            - Cite evidence from the diff for every finding, or mark it "Possible issue".
+            - Fix suggestions must be <=15 lines or cite a library/utility.
+            - Tiered depth: Critical/High get code snippets; Low gets one line.
+            - Max 5 nits; count the rest in the summary.
+            - Do not report style that CI already enforces.
+          claude_args: |
+            --model claude-sonnet-5
+            --max-turns 10
